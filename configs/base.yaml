@@ -1,0 +1,73 @@
+# Base experiment configuration.
+# Hardware-dependent fields (model, dtype, quantization, context) live in
+# configs/hardware.yaml, which is auto-generated. Anything here is a research
+# choice and is under version control.
+
+seed: 0
+seeds: [0, 1, 2]          # probe training seeds
+
+data:
+  dataset: ScaleAI/mrt
+  revision: main
+  # Stratified sample sizes. The signal check (stage 1) uses `n_signal_check`
+  # trajectories; the main grid uses `n_total`.
+  n_signal_check: 150
+  n_total: 1200
+  n_smoke: 30
+  # Cap per (task x family x label) cell so no single cell dominates. The mrt
+  # tree is heavily imbalanced -- one strategy (`selective`) holds ~40% of all
+  # attack transcripts.
+  max_per_cell: 40
+  balance_labels: true
+  # Agent models to draw from. Restricting to the two best-represented models
+  # keeps the attack-family axis from being confounded with agent identity.
+  agent_models:
+    - claude-3-5-sonnet-20241022
+    - claude-sonnet-4-20250514
+  min_family_count: 30     # families with fewer trajectories are pooled into "other"
+
+monitor_view:
+  # THE key rendering decision -- see DECISIONS.md D-004.
+  # The agent's hidden scratchpad (<model_thinking> ... </model_thinking>)
+  # contains explicit statements of malicious intent. A deployed monitor does
+  # not see it, and including it makes detection trivial (ceiling AUROC), which
+  # would destroy the tail-resolution question this project exists to ask.
+  strip_agent_thinking: true
+  # The agent's system prompt literally states the secondary task. It is never
+  # shown to the monitor.
+  strip_agent_system_prompt: true
+  # Tool results are enormous (single results exceed 30k characters). Elide the
+  # middle of long results, monitor-side, and record how often this fires.
+  max_tool_result_chars: 2000
+  max_message_chars: 6000
+
+split:
+  train_frac: 0.6
+  val_frac: 0.15
+  test_frac: 0.25
+
+probe:
+  # L2-regularised logistic regression on cached residual-stream activations.
+  C_grid: [0.0001, 0.001, 0.01, 0.1, 1.0, 10.0]
+  max_iter: 2000
+  standardize: true
+  representations: [score_pos, mean_pool]
+
+head:
+  # Fine-tuned classification head on the same activations -- a stronger
+  # comparison than the zero-shot baseline alone.
+  hidden_dim: 256
+  epochs: 60
+  lr: 0.001
+  weight_decay: 0.01
+  batch_size: 64
+  dropout: 0.2
+
+eval:
+  fpr_targets: [0.01, 0.003, 0.0003]
+  bootstrap_resamples: 10000
+  ci: 0.95
+
+paths:
+  raw: results/data/raw
+  index: results/data/index

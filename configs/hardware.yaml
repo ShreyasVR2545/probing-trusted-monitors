@@ -1,0 +1,30 @@
+hardware:
+  cuda_available: true
+  device_name: NVIDIA GeForce RTX 5070 Laptop GPU
+  vram_gb: 7.96
+  compute_capability:
+  - 12
+  - 0
+  bf16_supported: true
+  torch_version: 2.9.1+cu128
+  cuda_version: '12.8'
+  cpu_count: 24
+  ram_gb: 31.4
+  free_disk_gb: 509.5
+  platform: Windows 11 (AMD64)
+  mps_available: false
+plan:
+  tier: cuda-small
+  primary_model: Qwen/Qwen2.5-3B-Instruct
+  secondary_model: Qwen/Qwen2.5-1.5B-Instruct
+  quantization: 4bit
+  dtype: bfloat16
+  device: cuda
+  max_context_tokens: 16384
+  layer_stride: 2
+  run_location: local
+  notes:
+  - '~8GB tier: 3B in 4-bit is primary, 1.5B secondary. Context capped at 16k so the
+    KV cache plus per-layer activation capture fits alongside weights.'
+  - 'Blackwell (cc 12.x): requires torch built against CUDA 12.8+ and a bitsandbytes
+    release carrying sm_120 kernels.'

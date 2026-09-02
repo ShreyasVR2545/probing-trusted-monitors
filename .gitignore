@@ -1,0 +1,30 @@
+# environments
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# HF / model caches
+.cache/
+hf_cache/
+models/
+
+# heavy artefacts -- never commit
+results/**/activations/
+*.npy
+*.npz
+*.pt
+*.safetensors
+*.zip
+
+# logs / scratch
+*.log
+.ipynb_checkpoints/
+scratch/
+
+# downloaded dataset transcripts and the Hub file index -- reproducible, not ours to redistribute
+results/data/raw/
+results/data/index/
+results/data/trajectories.jsonl
+results/run.log
