@@ -279,3 +279,20 @@ GPU-hour budget. No further cuts made: the layer-sweep granularity and
 trajectory count are both already at the minimum useful for the transfer
 analysis, and negatives are scarce enough (D-016) that cutting the sample would
 damage every tail metric.
+
+### D-020 — Thermal ceiling raised from 78°C to 84°C
+**2026-09-03.** The guard's 78°C ceiling was set before observing the workload's
+steady-state temperature. Under the real run the GPU settles at 76-77°C, so the
+guard would have spent a five-hour stage oscillating in and out of cooling
+pauses without ever being triggered by a genuine thermal excursion.
+
+84°C is still well inside the safe envelope for this part (hardware throttling
+begins around 87-90°C) and still catches a runaway, but it sits above the
+workload's normal operating point rather than inside it.
+
+This does not weaken the crash mitigations, because the crash was not thermal:
+the event logs contain no thermal events, and a thermal shutdown does not
+present as `HYPERVISOR_ERROR` with identical bugcheck parameters. The measures
+aimed at the suspected cause — chunked prefill, inter-trajectory cooldown, CPU
+headroom cap — are unchanged. Applies from Stage 2 onward; Stage 1 had already
+read its configuration.

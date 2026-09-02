@@ -84,7 +84,7 @@ eval:
 power:
   enabled: true
   cooldown_s: 1.5          # pause between trajectories
-  max_temp_c: 78           # extend the pause while at or above this
+  max_temp_c: 84           # extend the pause while at or above this
   cpu_max_pct: 70          # CPU headroom during a run; restored on exit
   torch_threads: 4
   prefill_chunk_tokens: 1024   # feed the long-context prefill in segments
