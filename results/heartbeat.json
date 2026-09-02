@@ -1,12 +1,12 @@
 {
   "stage": "01_signal_check",
-  "item": "american_airlines_2|transcripts_no_hint_visible_v2_thinking_time|claude-3-5-sonnet-20241022|claude-3-5-sonnet-20241022|transcript_6",
-  "index": 19,
+  "item": "american_airlines_2|transcripts_no_hint_mm_v5_thinking_time|claude-3-5-sonnet-20241022|unmonitored|transcript_0",
+  "index": 10,
   "total": 150,
-  "time": "2026-09-03T04:12:31",
+  "time": "2026-09-03T04:16:27",
   "gpu": {
-    "temperature_c": 68.0,
-    "power_w": 10.62,
+    "temperature_c": 67.0,
+    "power_w": 10.48,
     "power_limit_w": null,
     "sm_clock_mhz": 180.0
   },

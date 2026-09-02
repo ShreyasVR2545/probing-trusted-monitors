@@ -1,10 +1,10 @@
 {
   "cell": "data",
   "status": "complete",
-  "started": "2026-09-03T03:56:15",
+  "started": "2026-09-03T04:13:03",
   "provenance": {
     "seed": 0,
-    "git_sha": "4327ff480f65b24c6ac89776e775ff4b217e4cb9",
+    "git_sha": "569369605ea2787d46fec7196da5301e569c52c7",
     "libraries": {
       "python": "3.12.13",
       "torch": "2.9.1+cu128",
@@ -38,8 +38,8 @@
       "monitor_view": {
         "strip_agent_thinking": true,
         "strip_agent_system_prompt": true,
-        "max_tool_result_chars": 2000,
-        "max_message_chars": 6000
+        "max_tool_result_chars": 800,
+        "max_message_chars": 3000
       },
       "split": {
         "train_frac": 0.6,
@@ -152,14 +152,14 @@
       "american_airlines_2": 268,
       "expenditure_accounting": 215
     },
-    "mean_rendered_chars": 42312.42374350087,
+    "mean_rendered_chars": 31252.439341421144,
     "monitor_view": {
       "strip_agent_thinking": true,
       "strip_agent_system_prompt": true,
-      "max_tool_result_chars": 2000,
-      "max_message_chars": 6000
+      "max_tool_result_chars": 800,
+      "max_message_chars": 3000
     }
   },
-  "finished": "2026-09-03T04:05:35",
-  "wall_clock_s": 559.89
+  "finished": "2026-09-03T04:13:04",
+  "wall_clock_s": 1.37
 }
