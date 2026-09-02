@@ -112,6 +112,42 @@ def main() -> int:
             "attack": hist["attack"], "benign": hist["benign"],
         }).to_csv(os.path.join(d, "histogram_emitted.csv"), index=False)
 
+        # -- Full-sample tail for the zero-shot channels ----------------------
+        # The lowest expressible false-positive rate is 1/(number of negatives),
+        # so the 25% test split cannot reach the preregistered 3e-3 and 3e-4
+        # budgets (DECISIONS.md D-017). The zero-shot channels need no training
+        # and are therefore valid on every trajectory, which roughly quadruples
+        # the negatives and pushes the floor down. This does not rescue 3e-4 --
+        # nothing in this dataset can -- but it is the deepest honest look at
+        # the tail available here. Reported separately, never mixed into the
+        # paired comparisons against the trained channels, which must stay on
+        # the common test split.
+        full = pd.read_csv(os.path.join(cell_dir("scores"), "scores_primary.csv"))
+        full = full[full.parse_ok.astype(bool)] if "parse_ok" in full.columns else full
+        yf = full.label.to_numpy(int)
+        n_neg_full = int((yf == 0).sum())
+        zs_rows = []
+        for c in [x for x in ("emitted", "logit_ev", "logit_logodds_80",
+                              "length_baseline") if x in full.columns]:
+            s = full[c].to_numpy(float)
+            st = tie_stats(s, yf, c).to_row()
+            row = {**st, "n_negatives": n_neg_full,
+                   "fpr_floor": 1.0 / n_neg_full if n_neg_full else float("nan")}
+            for f in cfg["eval"]["fpr_targets"]:
+                p = tpr_at_fpr(s, yf, f)
+                row[f"tpr@{f:g}"] = p.tpr
+                row[f"reachable@{f:g}"] = p.reachable
+            ci = bootstrap_metric(s, yf, lambda a, b: auroc(a, b),
+                                  n_resamples=cfg["eval"]["bootstrap_resamples"],
+                                  ci=cfg["eval"]["ci"], seed=cfg["seed"])
+            row.update({"auroc": ci.point, "auroc_lo": ci.lo, "auroc_hi": ci.hi})
+            zs_rows.append(row)
+        zs_full = pd.DataFrame(zs_rows)
+        zs_full.to_csv(os.path.join(d, "zeroshot_full_sample.csv"), index=False)
+        log.info(f"full-sample zero-shot tail ({n_neg_full} negatives, "
+                 f"FPR floor {1.0/max(n_neg_full,1):.2e}):\n"
+                 f"{zs_full[['channel','auroc','n_distinct','n_tied_at_max','resolution_floor_fpr']]}")
+
         # -- Calibration ------------------------------------------------------
         cal_rows, bin_rows = [], []
         for c in chans:

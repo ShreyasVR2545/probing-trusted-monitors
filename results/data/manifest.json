@@ -1,10 +1,10 @@
 {
   "cell": "data",
-  "status": "complete",
-  "started": "2026-09-03T03:44:14",
+  "status": "running",
+  "started": "2026-09-03T03:56:15",
   "provenance": {
     "seed": 0,
-    "git_sha": "3089eb86cc6c5d0f437b93c498c3d8c71cb0f755-dirty",
+    "git_sha": "4327ff480f65b24c6ac89776e775ff4b217e4cb9",
     "libraries": {
       "python": "3.12.13",
       "torch": "2.9.1+cu128",
@@ -28,14 +28,11 @@
         "dataset": "ScaleAI/mrt",
         "revision": "main",
         "n_signal_check": 150,
-        "n_total": 1200,
+        "n_total": 1400,
         "n_smoke": 30,
         "max_per_cell": 40,
         "balance_labels": true,
-        "agent_models": [
-          "claude-3-5-sonnet-20241022",
-          "claude-sonnet-4-20250514"
-        ],
+        "agent_models": null,
         "min_family_count": 30
       },
       "monitor_view": {
@@ -131,38 +128,5 @@
       "smoke": false
     }
   },
-  "outputs": {
-    "n_sampled": 1200,
-    "requested": 1200,
-    "loaded": 521,
-    "duplicates": 679,
-    "errors": 0,
-    "n_attack": 418,
-    "n_benign": 103,
-    "families": {
-      "monitor_manipulation": 56,
-      "naive": 44,
-      "visible_thinking": 88,
-      "liar": 99,
-      "selective_thinking": 60,
-      "no_thinking": 51,
-      "jailbreak": 20
-    },
-    "tasks": {
-      "american_airlines_2": 109,
-      "api_key_calendar_agendas_2": 103,
-      "bank_transfer_2": 104,
-      "spam_filter_update": 108,
-      "expenditure_accounting": 97
-    },
-    "mean_rendered_chars": 33661.481765834935,
-    "monitor_view": {
-      "strip_agent_thinking": true,
-      "strip_agent_system_prompt": true,
-      "max_tool_result_chars": 2000,
-      "max_message_chars": 6000
-    }
-  },
-  "finished": "2026-09-03T03:52:49",
-  "wall_clock_s": 514.67
+  "outputs": {}
 }
