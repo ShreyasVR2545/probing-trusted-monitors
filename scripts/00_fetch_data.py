@@ -57,6 +57,14 @@ def main() -> int:
         log.info(f"sampled {len(recs)} paths; downloading")
 
         trajs, load_stats = mrt.load_many(recs, revision=dcfg["revision"], logger=log)
+        err_rate = load_stats["errors"] / max(load_stats["requested"], 1)
+        if err_rate > 0.05:
+            raise RuntimeError(
+                f"{load_stats['errors']}/{load_stats['requested']} downloads failed "
+                f"({err_rate:.0%}). A failure rate this high reshapes the sample -- "
+                "re-run this stage once the network is stable; completed downloads "
+                "are cached and will not be refetched."
+            )
         log.info(f"loaded {load_stats['loaded']} "
                  f"({load_stats['duplicates']} content-hash duplicates dropped, "
                  f"{load_stats['errors']} errors)")

@@ -28,6 +28,7 @@ import json
 import os
 import random
 import re
+import time
 import urllib.error
 import urllib.request
 from collections import defaultdict
@@ -213,11 +214,20 @@ def stratified_sample(
     for r in recs:
         cells[(r["task"], r["strategy"], r["label"])].append(r)
 
+    # The per-cell cap has to be label-aware. Attacks spread over seven
+    # strategies but benign trajectories occupy a single family bucket, so a
+    # flat cap starves the benign side: with 5 tasks and a cap of 40 the sample
+    # can never exceed 200 negatives, which caps a balanced draw at 400 however
+    # large n_total is. Benign cells get whatever cap is needed to reach n_total/2.
+    n_benign_cells = len({k for k in cells if k[2] == "0"}) or 1
+    benign_cap = max(max_per_cell, -(-(n_total // 2) // n_benign_cells))
+
     # Prefer distinct family_sig within a cell -- the same trajectory recurs
     # across monitor-config directories, and diversity here reduces the number
     # of hash duplicates thrown away later.
     picked: list[dict[str, str]] = []
     for key, items in sorted(cells.items()):
+        cap = benign_cap if key[2] == "0" else max_per_cell
         rng.shuffle(items)
         by_sig: dict[str, list[dict[str, str]]] = defaultdict(list)
         for it in items:
@@ -226,13 +236,13 @@ def stratified_sample(
         sigs = sorted(by_sig)
         rng.shuffle(sigs)
         i = 0
-        while len(order) < min(max_per_cell, len(items)):
+        while len(order) < min(cap, len(items)):
             progressed = False
             for s in sigs:
                 if i < len(by_sig[s]):
                     order.append(by_sig[s][i])
                     progressed = True
-                    if len(order) >= min(max_per_cell, len(items)):
+                    if len(order) >= min(cap, len(items)):
                         break
             if not progressed:
                 break
@@ -270,17 +280,64 @@ def local_path_for(path: str, raw_dir: str) -> str:
     return os.path.join(raw_dir, task, f"{digest}.json")
 
 
+_SESSION: Any = None
+
+
+def _session() -> Any:
+    """A pooled HTTP session with retries.
+
+    A first pass over this dataset lost 288 of 400 downloads to transient DNS
+    failures partway through a long run. Connection pooling plus bounded retries
+    with backoff turns those into delays instead of missing trajectories -- and
+    missing trajectories are not neutral, since a network blip that happens to
+    coincide with one part of the sample would silently skew the family mix.
+    """
+    global _SESSION
+    if _SESSION is not None:
+        return _SESSION
+    import requests
+    from requests.adapters import HTTPAdapter
+    from urllib3.util.retry import Retry
+
+    s = requests.Session()
+    retry = Retry(
+        total=5, connect=5, read=5, backoff_factor=1.5,
+        status_forcelist=(408, 429, 500, 502, 503, 504),
+        allowed_methods=frozenset(["GET"]),
+    )
+    adapter = HTTPAdapter(max_retries=retry, pool_connections=8, pool_maxsize=8)
+    s.mount("https://", adapter)
+    s.headers.update({"User-Agent": "probing-trusted-monitors/0.1"})
+    _SESSION = s
+    return s
+
+
 def download(path: str, revision: str = "main", raw_dir: str | None = None,
-             timeout: int = 120) -> str:
+             timeout: int = 60, attempts: int = 4) -> str:
     raw_dir = raw_dir or os.path.join(REPO_ROOT, "results", "data", "raw")
     local = local_path_for(path, raw_dir)
     if os.path.exists(local) and os.path.getsize(local) > 0:
         return local
     os.makedirs(os.path.dirname(local), exist_ok=True)
     url = RESOLVE.format(ds=DATASET, rev=revision, path=path)
-    req = urllib.request.Request(url, headers={"User-Agent": "probing-trusted-monitors/0.1"})
-    with urllib.request.urlopen(req, timeout=timeout) as resp:
-        data = resp.read()
+
+    import requests
+
+    last: Exception | None = None
+    for k in range(attempts):
+        try:
+            resp = _session().get(url, timeout=timeout)
+            resp.raise_for_status()
+            data = resp.content
+            break
+        except requests.RequestException as exc:
+            last = exc
+            # DNS drops recover on their own; back off rather than give up, so a
+            # transient outage does not silently reshape the sample.
+            time.sleep(min(2.0 * (2 ** k), 30.0))
+    else:
+        raise OSError(f"{path}: {attempts} download attempts failed: {last!r}")
+
     tmp = local + ".part"
     with open(tmp, "wb") as fh:
         fh.write(data)
