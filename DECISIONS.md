@@ -145,3 +145,37 @@ suspiciousness score) is therefore added to every evaluation, in-distribution
 and transfer alike. Any channel that does not clear it convincingly has not
 demonstrated much. Added to the preregistration before Gate 1 and before any
 monitor result existed.
+
+### D-013 — Power/thermal mitigations after two host hard-resets
+**2026-09-03.** The machine hard-reset twice under sustained GPU inference
+(2026-08-24 and 2026-09-02), both times bugcheck `0x00020001`
+(HYPERVISOR_ERROR) with byte-identical parameters 1-3 — a deterministic path,
+not random corruption. No WHEA event, no display-driver TDR, nothing logged for
+three minutes before the reset, and no dump retained. The GPU is an RTX 5070
+Laptop under Dynamic Boost (50 W default against a 115 W ceiling) and the
+workload was oscillating hard between long-context prefill and light decode,
+twice per trajectory.
+
+Causation is not proven and cannot be without a dump. What was changed is the
+part the project controls — the workload's sharpest load steps. Full evidence
+and the elevated commands the user still needs to run are in
+`CRASH_MITIGATION.md`.
+
+The largest change is architectural rather than defensive: the prompt is now
+prefilled **once** in 1024-token chunks, `generate()` continues from that warm
+cache, and the activation-capture pass reuses the same cache cropped back to
+the prompt. Previously the long-context prefill ran twice per trajectory. This
+cut runtime from 33 s to 7 s per trajectory and peak VRAM from 4.7 GB to
+2.8 GB, so the safer configuration is also the faster one.
+
+### D-014 — Chunked prefill introduces bf16 numerical variation, and that is acceptable
+**2026-09-03.** Verified directly: the cache-reuse path and the crop-and-replay
+path are bit-identical to each other and agree with a fresh full forward on the
+argmax, but raw logits differ by up to 0.59 between chunked and single-pass
+matmuls. This is ordinary bf16 kernel variation, not a logic error.
+
+It is accepted rather than removed because every trajectory in a run takes the
+identical code path with a fixed chunk size, so it is reproducible and cannot
+bias a comparison between channels — all channels are read from the same
+forward pass. `prefill_chunk_tokens` is pinned in `configs/base.yaml` so the
+numbers reproduce.

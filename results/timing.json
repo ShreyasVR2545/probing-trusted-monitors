@@ -1,0 +1,8 @@
+[
+  {
+    "stage": "00_fetch_data",
+    "started": 1788371815.35729,
+    "wall_clock_s": 29.15,
+    "peak_gpu_gb": 0.0
+  }
+]

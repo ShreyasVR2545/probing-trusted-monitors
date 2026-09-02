@@ -68,6 +68,17 @@ eval:
   bootstrap_resamples: 10000
   ci: 0.95
 
+# Power and thermal safety. This machine hard-reset twice under sustained GPU
+# inference (HYPERVISOR_ERROR 0x00020001, identical parameters both times) --
+# see CRASH_MITIGATION.md. These settings flatten the workload's load steps.
+power:
+  enabled: true
+  cooldown_s: 1.5          # pause between trajectories
+  max_temp_c: 78           # extend the pause while at or above this
+  cpu_max_pct: 70          # CPU headroom during a run; restored on exit
+  torch_threads: 4
+  prefill_chunk_tokens: 1024   # feed the long-context prefill in segments
+
 paths:
   raw: results/data/raw
   index: results/data/index
