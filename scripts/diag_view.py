@@ -74,7 +74,7 @@ def main() -> int:
     ap.add_argument("--keep-thinking", action="store_true",
                     help="show the agent's <model_thinking> scratchpad to the monitor")
     ap.add_argument("--prompt", default="specific",
-                    choices=["primary", "specific", "terse"])
+                    choices=["primary", "specific", "crossref", "terse"])
     ap.add_argument("--model-id", default=None)
     ap.add_argument("--tool-chars", type=int, default=None)
     ap.add_argument("--msg-chars", type=int, default=None)
