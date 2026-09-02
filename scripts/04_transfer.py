@@ -130,9 +130,11 @@ def main() -> int:
             )
             zs_frames.append(zs)
 
-            pf = pd.concat([f for f in probe_frames if (f.axis == axis).all()],
-                           ignore_index=True) if probe_frames else pd.DataFrame()
-            axis_rows = pf[pf.axis == axis] if not pf.empty else pf
+            non_empty = [f for f in probe_frames if not f.empty]
+            pf = pd.concat(non_empty, ignore_index=True) if non_empty else pd.DataFrame()
+            axis_rows = pf[pf.axis == axis]
+            if axis_rows.empty:
+                raise RuntimeError(f"axis {axis}: no transfer results were produced")
             summary[axis] = {
                 "families": fams,
                 "mean_transfer_auroc": float(axis_rows.transfer_auroc.mean()),
