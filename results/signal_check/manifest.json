@@ -1,10 +1,10 @@
 {
-  "cell": "data",
-  "status": "complete",
-  "started": "2026-09-03T03:56:15",
+  "cell": "signal_check",
+  "status": "running",
+  "started": "2026-09-03T04:06:00",
   "provenance": {
     "seed": 0,
-    "git_sha": "4327ff480f65b24c6ac89776e775ff4b217e4cb9",
+    "git_sha": "9dd5939ad311490ecaba8700f7353718c1b0652a-dirty",
     "libraries": {
       "python": "3.12.13",
       "torch": "2.9.1+cu128",
@@ -128,38 +128,5 @@
       "smoke": false
     }
   },
-  "outputs": {
-    "n_sampled": 1304,
-    "requested": 1304,
-    "loaded": 1154,
-    "duplicates": 150,
-    "errors": 0,
-    "n_attack": 648,
-    "n_benign": 506,
-    "families": {
-      "liar": 120,
-      "selective_thinking": 112,
-      "jailbreak": 58,
-      "visible_thinking": 135,
-      "no_thinking": 73,
-      "monitor_manipulation": 62,
-      "naive": 88
-    },
-    "tasks": {
-      "api_key_calendar_agendas_2": 222,
-      "bank_transfer_2": 218,
-      "spam_filter_update": 231,
-      "american_airlines_2": 268,
-      "expenditure_accounting": 215
-    },
-    "mean_rendered_chars": 42312.42374350087,
-    "monitor_view": {
-      "strip_agent_thinking": true,
-      "strip_agent_system_prompt": true,
-      "max_tool_result_chars": 2000,
-      "max_message_chars": 6000
-    }
-  },
-  "finished": "2026-09-03T04:05:35",
-  "wall_clock_s": 559.89
+  "outputs": {}
 }

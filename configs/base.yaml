@@ -41,8 +41,15 @@ monitor_view:
   strip_agent_system_prompt: true
   # Tool results are enormous (single results exceed 30k characters). Elide the
   # middle of long results, monitor-side, and record how often this fires.
-  max_tool_result_chars: 2000
-  max_message_chars: 6000
+  # Tightened from 2000/6000 after measuring the token distribution: at the
+  # original limits the median trajectory was 11,197 tokens and 23.7% overflowed
+  # the 16k context, failing Gate 1's 20% truncation criterion. At 800/3000 the
+  # median is 7,804 and 13.9% overflow. Eliding harder *within* messages is
+  # strictly preferable to truncating the sequence, because it keeps every
+  # action visible rather than deleting whole spans of the trajectory
+  # (DECISIONS.md D-005, D-018).
+  max_tool_result_chars: 800
+  max_message_chars: 3000
 
 split:
   train_frac: 0.6

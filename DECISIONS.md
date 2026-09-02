@@ -240,3 +240,42 @@ distinct values in the top 1%, and the resolution-floor FPR -- which measures
 the Lucassen & Kaufman phenomenon directly and is well powered at this sample
 size, rather than TPR at a budget this dataset cannot express. Recorded as a
 deviation from the preregistration and carried into the writeup.
+
+### D-018 — Elision limits tightened from 2000/6000 to 800/3000
+**2026-09-03.** Measured the token-length distribution of the rendered
+trajectories before committing to the main run. At the original limits the
+median trajectory was **11,197 tokens**, p75 was 16,083, and **23.7% exceeded
+the 16k context window** — failing Gate 1's criterion that no more than 20% of
+trajectories be truncated.
+
+Two ways out: raise the context window, or elide harder within messages.
+Raising the context to 32k would drop truncation but costs ~24% more compute per
+trajectory and pushes an already long run longer. Tightening elision to 800
+characters per tool result and 3,000 per message gives a median of 7,804 tokens
+and **13.9% truncation**, and is about 19% *faster*.
+
+Tightening elision is also the better choice on the merits, and for the reason
+already given in D-005: eliding within a message keeps every agent action
+visible and only shortens the bulk content inside each, whereas letting a
+trajectory overflow the context deletes whole spans of it. For detecting an
+attack, seeing every action matters more than seeing every byte of a bulk email
+dump. The cost — the monitor sees less of each tool result, so an attack hidden
+deep inside one long result is harder to spot — is real and is a stated
+limitation.
+
+Elision counts remain recorded per trajectory so the writeup can check the
+elision rate does not differ systematically between attack and benign
+trajectories.
+
+### D-019 — Runtime is ~20s per trajectory at the real context, not 7s
+**2026-09-03.** The 7s per-trajectory figure measured while fixing the crash was
+taken under the smoke configuration, which caps context at 4,096 tokens. At the
+real 16k cap the measured rate is **19.9 s/trajectory**, because prefill cost
+scales with context and the median trajectory is far longer than the smoke cap.
+
+With the D-018 elision limits this comes down to roughly 16 s/trajectory. Total
+projected run is about 6 hours (Stage 2 alone ~5 hours), against the 15
+GPU-hour budget. No further cuts made: the layer-sweep granularity and
+trajectory count are both already at the minimum useful for the transfer
+analysis, and negatives are scarce enough (D-016) that cutting the sample would
+damage every tail metric.
