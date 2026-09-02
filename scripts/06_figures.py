@@ -59,11 +59,31 @@ plt.rcParams.update({
 
 
 def save(fig, name: str, caption: str) -> None:
+    """Write PNG and PDF with the caption below the axes.
+
+    The caption is placed in figure coordinates *below* the axes and wrapped by
+    hand -- matplotlib's `wrap=True` does not respect the figure box for
+    `fig.text`, and an unwrapped caption overlaps the x-axis label.
+    """
+    import textwrap
+
     d = figures_dir()
-    fig.text(0.01, 0.005, caption, fontsize=7, va="bottom", ha="left", wrap=True,
-             color="#444444")
-    fig.savefig(os.path.join(d, f"{name}.png"), bbox_inches="tight")
-    fig.savefig(os.path.join(d, f"{name}.pdf"), bbox_inches="tight")
+    width_chars = max(70, int(fig.get_size_inches()[0] * 17))
+    wrapped = "\n".join(textwrap.wrap(caption, width=width_chars))
+    # Place the caption below everything actually drawn. A fixed negative y
+    # collides with rotated tick labels, whose extent is only known after a
+    # draw, so measure the axes' tight bounding boxes first.
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    inv = fig.transFigure.inverted()
+    ymin = min(
+        ax.get_tightbbox(renderer).transformed(inv).y0 for ax in fig.axes
+    ) if fig.axes else 0.0
+    fig.text(0.0, ymin - 0.045, wrapped, fontsize=7, va="top", ha="left",
+             color="#444444", linespacing=1.45)
+    for ext in ("png", "pdf"):
+        fig.savefig(os.path.join(d, f"{name}.{ext}"), bbox_inches="tight",
+                    pad_inches=0.25)
     plt.close(fig)
 
 

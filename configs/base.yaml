@@ -12,18 +12,21 @@ data:
   # Stratified sample sizes. The signal check (stage 1) uses `n_signal_check`
   # trajectories; the main grid uses `n_total`.
   n_signal_check: 150
-  n_total: 1200
+  n_total: 1400
   n_smoke: 30
   # Cap per (task x family x label) cell so no single cell dominates. The mrt
   # tree is heavily imbalanced -- one strategy (`selective`) holds ~40% of all
   # attack transcripts.
   max_per_cell: 40
   balance_labels: true
-  # Agent models to draw from. Restricting to the two best-represented models
-  # keeps the attack-family axis from being confounded with agent identity.
-  agent_models:
-    - claude-3-5-sonnet-20241022
-    - claude-sonnet-4-20250514
+  # All agent models are used. Restricting to the two best-represented ones was
+  # the original intent (it would keep the attack-family axis from being
+  # confounded with agent identity), but after deduplication that leaves only
+  # 381 distinct benign trajectories against 738 across all models. Negatives
+  # are the binding constraint on every tail metric in this project, so the
+  # wider pool wins and agent identity is instead recorded per trajectory and
+  # reported as a confound check. See DECISIONS.md D-016.
+  agent_models: null
   min_family_count: 30     # families with fewer trajectories are pooled into "other"
 
 monitor_view:

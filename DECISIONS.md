@@ -179,3 +179,64 @@ identical code path with a fixed chunk size, so it is reproducible and cannot
 bias a comparison between channels — all channels are read from the same
 forward pass. `prefill_chunk_tokens` is pinned in `configs/base.yaml` so the
 numbers reproduce.
+
+### D-015 — Candidates are deduplicated *before* download, not only after
+**2026-09-03.** The first full fetch drew 1,200 files and yielded only 521
+distinct trajectories: 679 were content-hash duplicates. The benign class
+collapsed worst, to 103 trajectories against 418 attacks, because mrt generated
+benign runs once and re-monitored them under dozens of monitor configurations.
+
+The cause was that `strip_monitor_tokens` removed monitor-side tokens only from
+the *tail* of a directory name, while they in fact occur throughout
+(`no_secondary_task_sequential_3_likert_reminder_v2`,
+`no_secondary_task_stepbystep_v3_roleplay`). The same trajectory therefore kept
+many distinct signatures and candidate-level deduplication never fired.
+
+Tokens are now stripped wherever they occur, with one exception: a version
+token (`v3`) is dropped only when the token it follows was itself dropped as
+monitor-side, so attack strategies like `mm_v3` and `mm_v4` stay distinct.
+Candidates are then deduplicated on
+`(task, agent_model, signature, filename)` before anything is downloaded.
+
+Validated against the 1,200 already-downloaded transcripts: the new signature
+gives 547 keys for 521 truly distinct trajectories (previously 1,150), and
+conflates genuinely distinct trajectories in only 5 cases. Content-hash
+deduplication after download remains the correctness guarantee; this only stops
+the download budget being spent on duplicates.
+
+### D-016 — All agent models, rather than the two best-represented
+**2026-09-03.** D-008 restricted the sample to `claude-3-5-sonnet-20241022` and
+`claude-sonnet-4-20250514` so the attack-family axis would not be confounded
+with agent identity. Measurement after fixing deduplication showed the cost is
+too high: those two models supply only **381** distinct benign trajectories,
+against **738** across all models.
+
+Negatives are the binding constraint on every tail metric here — the lowest
+expressible false-positive rate is 1/(number of negatives) — so the wider pool
+wins. Agent identity is recorded per trajectory and reported as a confound
+check instead of being designed out. This reverses part of D-008; the per-cell
+stratification and the family caps from D-008 are unchanged.
+
+Also established: **benign trajectories exist only in the five SHADE-Arena
+tasks.** The computer-use tasks (`admin_*`, `ds_*`, `finance_*`, `hr_*`,
+`research_*`) have no `no_secondary_task` directories at all, so they carry no
+negatives and cannot contribute to a discrimination task. The sample is
+therefore SHADE-Arena-derived throughout, which sharpens an already-planned
+limitation rather than introducing a new one.
+
+### D-017 — FPR = 3e-4 is not reachable on this dataset, and is reported as such
+**2026-09-03.** The preregistration fixed TPR targets at FPR in
+{0.01, 0.003, 0.0003}. After deduplication mrt yields at most ~738 distinct
+benign trajectories, so the smallest expressible non-zero false-positive rate is
+1/738 = 1.4e-3 using every negative, and about 1/175 = 5.7e-3 on a 25% test
+split. FPR = 3e-4 would need at least 3,333 negatives and 1e-2 is the only
+preregistered target comfortably in range.
+
+No target is dropped and none is quietly reinterpreted. `tpr_at_fpr` returns
+`reachable=False` with the reason attached rather than a fabricated number, and
+figures and tables carry that flag. The consequence is that the **primary RQ1
+evidence is the resolution analysis** -- trajectories tied at the maximum,
+distinct values in the top 1%, and the resolution-floor FPR -- which measures
+the Lucassen & Kaufman phenomenon directly and is well powered at this sample
+size, rather than TPR at a budget this dataset cannot express. Recorded as a
+deviation from the preregistration and carried into the writeup.

@@ -10,5 +10,11 @@
     "started": 1788374162.5974715,
     "wall_clock_s": 13023.91,
     "peak_gpu_gb": 0.0
+  },
+  {
+    "stage": "00_fetch_data",
+    "started": 1788387250.7841516,
+    "wall_clock_s": 518.26,
+    "peak_gpu_gb": 0.0
   }
 ]

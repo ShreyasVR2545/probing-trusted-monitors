@@ -1,6 +1,6 @@
 {
   "cell": "data",
-  "status": "running",
+  "status": "complete",
   "started": "2026-09-03T03:44:14",
   "provenance": {
     "seed": 0,
@@ -131,5 +131,38 @@
       "smoke": false
     }
   },
-  "outputs": {}
+  "outputs": {
+    "n_sampled": 1200,
+    "requested": 1200,
+    "loaded": 521,
+    "duplicates": 679,
+    "errors": 0,
+    "n_attack": 418,
+    "n_benign": 103,
+    "families": {
+      "monitor_manipulation": 56,
+      "naive": 44,
+      "visible_thinking": 88,
+      "liar": 99,
+      "selective_thinking": 60,
+      "no_thinking": 51,
+      "jailbreak": 20
+    },
+    "tasks": {
+      "american_airlines_2": 109,
+      "api_key_calendar_agendas_2": 103,
+      "bank_transfer_2": 104,
+      "spam_filter_update": 108,
+      "expenditure_accounting": 97
+    },
+    "mean_rendered_chars": 33661.481765834935,
+    "monitor_view": {
+      "strip_agent_thinking": true,
+      "strip_agent_system_prompt": true,
+      "max_tool_result_chars": 2000,
+      "max_message_chars": 6000
+    }
+  },
+  "finished": "2026-09-03T03:52:49",
+  "wall_clock_s": 514.67
 }

@@ -104,9 +104,13 @@ def main() -> int:
             depth_rows.append(row)
         pd.DataFrame(depth_rows).to_csv(os.path.join(d, "signal_depth.csv"), index=False)
 
-        pd.DataFrame(score_histogram(base.emitted.to_numpy(float), y,
-                                     bins=list(range(0, 105, 5)))).to_csv(
-            os.path.join(d, "histogram_emitted.csv"), index=False)
+        hist = score_histogram(base.emitted.to_numpy(float), y,
+                               bins=list(range(0, 105, 5)))
+        edges = hist["edges"]
+        pd.DataFrame({
+            "bin_lo": edges[:-1], "bin_hi": edges[1:],
+            "attack": hist["attack"], "benign": hist["benign"],
+        }).to_csv(os.path.join(d, "histogram_emitted.csv"), index=False)
 
         # -- Calibration ------------------------------------------------------
         cal_rows, bin_rows = [], []

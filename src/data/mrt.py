@@ -110,11 +110,57 @@ def hint_condition_of(dirname: str) -> str:
     return "hint"
 
 
+VERSION_TOKEN_RE = re.compile(r"^v\d+$")
+
+
 def strip_monitor_tokens(dirname: str) -> str:
+    """Reduce a directory name to the agent-side condition that produced it.
+
+    Monitor-side configuration appears *throughout* the name, not only at the
+    end (`no_secondary_task_sequential_3_likert_reminder_v2`,
+    `no_secondary_task_stepbystep_v3_roleplay`), so tokens are removed wherever
+    they occur. Stripping only the tail left the same agent trajectory under
+    many different signatures and defeated candidate-level deduplication.
+
+    Version tokens are ambiguous: `v3` in `mm_v3` names an attack strategy,
+    while `v2` in `likert_reminder_v2` names a monitor configuration. A version
+    is therefore dropped only when the token it follows was itself dropped as
+    monitor-side, which keeps `mm_v3` and `mm_v4` distinct.
+
+    Validated against 1,200 downloaded transcripts: this signature plus
+    (task, agent_model, filename) yields 547 keys for 521 truly distinct
+    trajectories, and conflates distinct trajectories in only 5 cases. Those
+    residual collisions cost a little sample diversity and nothing else --
+    content-hash deduplication after download remains the correctness
+    guarantee.
+    """
     toks = dirname.replace("transcripts", "", 1).strip("_").split("_")
-    while toks and toks[-1] in MONITOR_SIDE_TOKENS:
-        toks.pop()
-    return "_".join(toks) or "base"
+    out: list[str] = []
+    prev_dropped = False
+    for t in toks:
+        if not t:
+            continue
+        if t in MONITOR_SIDE_TOKENS:
+            prev_dropped = True
+            continue
+        if prev_dropped and (VERSION_TOKEN_RE.match(t) or t.isdigit()):
+            continue
+        out.append(t)
+        prev_dropped = False
+    return "_".join(out) or "base"
+
+
+def trajectory_key(rec: dict[str, str]) -> tuple[str, str, str, str]:
+    """A pre-download proxy for trajectory identity.
+
+    mrt re-monitors the same agent run under many monitor configurations, so
+    the same trajectory appears in many directories. Sampling files blindly
+    wastes most of the budget on duplicates: a first pass drew 1,200 files and
+    got only 521 distinct trajectories, collapsing the benign class to 103.
+    Deduplicating candidates on this key before downloading fixes that.
+    """
+    return (rec["task"], rec["agent_model"],
+            strip_monitor_tokens(rec["family_dir"]), rec["fname"])
 
 
 # --------------------------------------------------------------------------
@@ -209,6 +255,19 @@ def stratified_sample(
     # Drop attack directories whose strategy could not be identified: including
     # them would make the RQ2 family axis meaningless.
     recs = [r for r in recs if r["strategy"] != "unlabelled"]
+
+    # Collapse candidates that are the same agent trajectory re-monitored under
+    # different monitor configurations, keeping one representative each. Without
+    # this the download budget is spent overwhelmingly on duplicates.
+    seen_keys: set[tuple[str, str, str, str]] = set()
+    unique: list[dict[str, str]] = []
+    for r in sorted(recs, key=lambda x: x["path"]):
+        k = trajectory_key(r)
+        if k in seen_keys:
+            continue
+        seen_keys.add(k)
+        unique.append(r)
+    recs = unique
 
     cells: dict[tuple[str, str, str], list[dict[str, str]]] = defaultdict(list)
     for r in recs:
