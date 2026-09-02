@@ -36,6 +36,7 @@ from src.utils.checkpoint import cell, cell_dir  # noqa: E402
 from src.utils.config import load_config, plan_of  # noqa: E402
 from src.utils.hardware import Plan  # noqa: E402
 from src.utils.logging import get_logger, stage_timer  # noqa: E402
+from src.utils.power import Heartbeat, PowerGuard  # noqa: E402
 from src.utils.seeding import provenance, seed_everything  # noqa: E402
 
 CELL = "signal_check"
@@ -67,7 +68,7 @@ def load_data(n: int, seed: int) -> tuple[pd.DataFrame, dict[str, str]]:
 
 def run_condition(meta: pd.DataFrame, texts: dict[str, str], plan: Plan,
                   model_id: str, prompt_variant: str, max_new_tokens: int,
-                  log) -> pd.DataFrame:
+                  log, pcfg: dict, attempt: int) -> pd.DataFrame:
     loaded = load_monitor(plan, model_id=model_id)
     log.info(f"loaded {model_id} ({plan.quantization}, {plan.dtype}); "
              f"{loaded.n_layers} layers, hidden {loaded.hidden_size}")
@@ -75,20 +76,30 @@ def run_condition(meta: pd.DataFrame, texts: dict[str, str], plan: Plan,
         loaded, max_context_tokens=plan.max_context_tokens,
         max_new_tokens=max_new_tokens, layer_stride=plan.layer_stride,
         capture_activations=False, prompt_variant=prompt_variant,
+        prefill_chunk_tokens=pcfg["prefill_chunk_tokens"],
     )
     log.info(f"score trie: {runner.trie.stats()}")
 
+    hb = Heartbeat()
     rows = []
     t0 = time.perf_counter()
-    for i, r in meta.iterrows():
-        res = runner.run(r.traj_id, texts[r.traj_id])
-        rows.append({**res.to_row(), "label": int(r.label), "task": r.task,
-                     "strategy": r.strategy, "model_id": model_id,
-                     "prompt_variant": prompt_variant})
-        if (i + 1) % 10 == 0:
-            rate = (time.perf_counter() - t0) / (i + 1)
-            log.info(f"  {i+1}/{len(meta)} ({rate:.1f}s/traj, "
-                     f"~{rate*(len(meta)-i-1)/60:.1f} min left)")
+    with PowerGuard(cooldown_s=pcfg["cooldown_s"], max_temp_c=pcfg["max_temp_c"],
+                    cpu_max_pct=pcfg["cpu_max_pct"],
+                    torch_threads=pcfg["torch_threads"],
+                    enabled=pcfg["enabled"], logger=log) as guard:
+        for i, r in meta.iterrows():
+            hb.beat("01_signal_check", r.traj_id, int(i), len(meta),
+                    extra={"attempt": attempt, "model_id": model_id})
+            res = runner.run(r.traj_id, texts[r.traj_id])
+            rows.append({**res.to_row(), "label": int(r.label), "task": r.task,
+                         "strategy": r.strategy, "model_id": model_id,
+                         "prompt_variant": prompt_variant})
+            guard.cooldown()
+            if (i + 1) % 10 == 0:
+                rate = (time.perf_counter() - t0) / (i + 1)
+                log.info(f"  {i+1}/{len(meta)} ({rate:.1f}s/traj, "
+                         f"~{rate*(len(meta)-i-1)/60:.1f} min left)")
+    hb.clear()
     del loaded, runner
     import gc
 
@@ -169,7 +180,8 @@ def main() -> int:
         for k, att in enumerate(attempts):
             log.info(f"--- attempt {k}: {att} ---")
             df = run_condition(meta, texts, plan, att["model_id"],
-                               att["prompt_variant"], args.max_new_tokens, log)
+                               att["prompt_variant"], args.max_new_tokens, log,
+                               cfg["power"], k)
             ev = evaluate_condition(df, cfg["eval"]["bootstrap_resamples"], seed)
             passed, fails = gate1_verdict(ev)
             log.info(f"attempt {k}: AUROC {ev['auroc']:.3f} "
