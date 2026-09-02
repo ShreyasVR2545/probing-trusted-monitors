@@ -28,3 +28,4 @@ results/data/raw/
 results/data/index/
 results/data/trajectories.jsonl
 results/run.log
+results/heartbeat.json
