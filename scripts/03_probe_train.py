@@ -57,11 +57,27 @@ COMPARISONS = [
 ]
 
 
-def load_scores(tag: str = "primary") -> pd.DataFrame:
+def load_scores(tag: str = "primary", cfg: dict | None = None) -> pd.DataFrame:
+    """Scored trajectories, optionally restricted to chosen agent models.
+
+    The restriction exists to remove the agent-identity shortcut documented in
+    DECISIONS.md D-030: agent identity alone predicts the label at AUROC 0.805,
+    and a probe on mean-pooled activations exploits it to reach 0.99 without
+    detecting anything about attacks.
+    """
     path = os.path.join(cell_dir("scores"), f"scores_{tag}.csv")
     if not os.path.exists(path):
         raise FileNotFoundError(f"{path} missing -- run stage 2 first.")
-    return pd.read_csv(path)
+    df = pd.read_csv(path)
+    keep = ((cfg or {}).get("analysis") or {}).get("restrict_agent_models")
+    if keep:
+        before = len(df)
+        df = df[df.agent_model.isin(keep)].reset_index(drop=True)
+        get_logger().info(
+            f"agent restriction {keep}: {len(df)} of {before} trajectories "
+            f"({int((df.label == 0).sum())} benign / {int((df.label == 1).sum())} attack)"
+        )
+    return df
 
 
 def as_trajectories(df: pd.DataFrame) -> list[Trajectory]:
@@ -96,7 +112,7 @@ def main() -> int:
         if out.get("_skipped"):
             return 0
 
-        df = load_scores(args.tag)
+        df = load_scores(args.tag, cfg)
         df = df[df.traj_id.map(store.has)].reset_index(drop=True)
         if df.empty:
             raise RuntimeError("no trajectories with cached activations -- rerun stage 2")

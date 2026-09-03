@@ -64,5 +64,23 @@
     "started": 1788434987.1428714,
     "wall_clock_s": 2009.33,
     "peak_gpu_gb": 0.0
+  },
+  {
+    "stage": "04_transfer",
+    "started": 1788437003.9595976,
+    "wall_clock_s": 2718.71,
+    "peak_gpu_gb": 0.0
+  },
+  {
+    "stage": "05_analysis",
+    "started": 1788439730.8652937,
+    "wall_clock_s": 276.17,
+    "peak_gpu_gb": 0.0
+  },
+  {
+    "stage": "06_figures",
+    "started": 1788440014.9573507,
+    "wall_clock_s": 6.2,
+    "peak_gpu_gb": 0.0
   }
 ]

@@ -1,0 +1,10 @@
+channel,usable@0.1,usable@0.05,usable@0.02,usable@0.01,usable@0.005,usable@0.003,usable@0.001,usable@0.0003,usable@0.0001,tpr@0.01,tpr_randomtie@0.01,tpr@0.003,tpr_randomtie@0.003,tpr@0.0003,tpr_randomtie@0.0003
+emitted,True,True,True,True,True,True,True,True,True,0.01,0.06745,0.01,0.036000000000000004,0.01,0.0368
+logit_ev,True,True,True,True,True,True,True,True,True,0.12,0.12000000000000004,0.09,0.09,0.09,0.09
+logit_logodds_50,True,True,True,True,True,True,True,True,True,0.12,0.12000000000000004,0.06,0.06000000000000002,0.06,0.06000000000000002
+logit_logodds_80,True,True,True,True,True,True,True,True,True,0.12,0.12000000000000004,0.09,0.09,0.09,0.09
+logit_logodds_90,True,True,True,True,True,True,True,True,True,0.11,0.11000000000000004,0.08,0.07999999999999999,0.08,0.07999999999999999
+probe,True,True,True,True,True,True,True,True,True,0.89,0.8900000000000001,0.63,0.63,0.63,0.63
+head,True,True,True,True,True,True,True,True,True,0.94,0.9448499999999999,0.88,0.8800000000000003,0.88,0.8800000000000003
+length_baseline,True,True,True,True,False,False,False,False,False,0.02,0.019999999999999997,0.0,0.0,0.0,0.0
+ensemble,True,True,True,True,True,True,True,True,True,0.34,0.3399999999999999,0.33,0.33,0.33,0.33

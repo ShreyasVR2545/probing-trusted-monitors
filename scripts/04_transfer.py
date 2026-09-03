@@ -83,7 +83,7 @@ def main() -> int:
         if out.get("_skipped"):
             return 0
 
-        df = load_scores(args.tag)
+        df = load_scores(args.tag, cfg)
         df = df[df.traj_id.map(store.has)].reset_index(drop=True)
         labels = dict(zip(df.traj_id, df.label.astype(int)))
         trajs = as_trajectories(df)

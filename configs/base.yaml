@@ -56,6 +56,17 @@ split:
   val_frac: 0.15
   test_frac: 0.25
 
+# Analysis-side restriction, applied in stages 3-5 (not stage 2, so the
+# activation cache stays complete and the confounded run remains reproducible).
+# The mrt sample is severely imbalanced by generating agent -- agent identity
+# alone predicts the label at AUROC 0.805 -- and a probe on mean-pooled
+# activations reads writing style, scoring 0.99 without detecting any attack.
+# Restricting to a single agent model removes the shortcut by construction.
+# See DECISIONS.md D-030, D-031. Set to null to reproduce the confounded run.
+analysis:
+  restrict_agent_models:
+    - claude-3-5-sonnet-20241022
+
 probe:
   # L2-regularised logistic regression on cached residual-stream activations.
   C_grid: [0.0001, 0.001, 0.01, 0.1, 1.0, 10.0]
