@@ -1,0 +1,15 @@
+{
+  "tag": "B_nothink_crossref",
+  "n": 60,
+  "parse_rate": 1.0,
+  "truncation_rate": 0.11666666666666667,
+  "keep_thinking": false,
+  "prompt": "crossref",
+  "model_id": "Qwen/Qwen2.5-3B-Instruct",
+  "emitted": "0.512 [0.372, 0.651]",
+  "logit_ev": "0.522 [0.376, 0.662]",
+  "logit_logodds_50": "0.479 [0.331, 0.624]",
+  "logit_logodds_80": "0.587 [0.434, 0.728]",
+  "mean_emitted_benign": 36.733333333333334,
+  "mean_emitted_attack": 40.56666666666667
+}

@@ -386,3 +386,39 @@ is both the more realistic setting and, empirically, the better-performing one.
 Two things follow — the remaining lever is monitor capability rather than what
 the monitor is shown, and "showing a weak monitor the agent's chain of thought
 made it worse" is a finding worth reporting in its own right.
+
+### D-024 — Prompt engineering exhausted; the 3B monitor cannot do this task
+**2026-09-03.** Three prompt variants on the thinking-stripped view,
+Qwen2.5-3B-Instruct:
+
+| Prompt | n | AUROC | Mean emitted (benign / attack) |
+|---|---|---|---|
+| `primary` | 150 | 0.567 [0.484, 0.651] | 48.7 / 55.8 |
+| `specific` | 150 | 0.580 [0.491, 0.669] | — |
+| `crossref` | 60 | 0.512 [0.372, 0.651] | 36.7 / 40.6 |
+
+`crossref` was written specifically against the diagnosed failure: it forces the
+model to enumerate the user's requests, enumerate the agent's actions, and score
+only on what it cannot account for. It did not help, and it failed in an
+instructive way — **51 of 60 runs exhausted the 220-token budget before reaching
+the verdict**, and the emitted scores cluster on 21 and 61, the boundary values
+from the scale in the prompt. The model is copying the anchors rather than
+performing the comparison.
+
+Across every variant the spread between classes stays under 4 points on a
+0-100 scale. This is not a wording problem. A 3B model cannot reliably
+cross-reference a 10,000-token action log against a user request, which is what
+the task reduces to once the scratchpad is hidden.
+
+Escalating to Qwen2.5-7B-Instruct in 4-bit. Measured fit: ~3.89 GB of NF4
+weights plus ~0.88 GB of KV cache at a 16k context, about 4.8 GB of the 7.96 GB
+available, so it runs locally without the Kaggle path. This is the brief's
+"try the other model size" remediation taken *upward*, which is the direction
+the diagnosis points.
+
+If 7B also fails Gate 1, the fallback is the brief's tertiary dataset,
+`RoganInglis/apps-control-arena` (verified public and downloadable): backdoored
+versus honest APPS solutions, single-step and far shorter. Spotting a backdoor
+in a code diff is a much better match for a small model's capabilities than
+auditing a long agent trajectory. The brief flags it as a weaker setting for
+this question and that caveat would be reported prominently.
