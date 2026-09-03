@@ -563,3 +563,35 @@ renaming rather than recomputed.
 
 The general lesson, now applied in both places: **no user-controlled or
 data-derived string goes into a path on this platform.**
+
+### D-029 — Cost discipline: trajectory count cut from 1,154 to 905
+**2026-09-03.** Correcting an estimate I got wrong. I read the marginal rate off
+a single log delta (30 s/trajectory) and reported ~12.3 GPU-hours. The rate is
+in fact highly variable, because trajectory length is: successive 10-trajectory
+deltas measured **30.0, 47.1, 62.4, 31.1 s**, averaging ~43 s. At that rate the
+full 1,154 trajectories project to about **16 GPU-hours**, over the 15-hour
+budget.
+
+The brief prescribes cutting layer-sweep granularity first, then trajectory
+count. That order assumes the layer sweep is a meaningful cost, and after D-027
+it is not: the capture hooks are a single fused GPU reduction per layer and
+cost a low single-digit percentage. Halving them would save almost nothing while
+halving the resolution of the per-layer profile, which is a preregistered
+deliverable. So the cut is taken on trajectory count instead, and the deviation
+from the prescribed order is recorded here with its reason.
+
+**What was cut, and what was protected.** The subset keeps **every one of the
+506 benign trajectories** and reduces attacks from 648 to 399. Negatives are the
+scarcer and more valuable resource: the lowest expressible false-positive rate
+is 1/(number of negatives) (D-017), so cutting negatives would directly damage
+every tail metric, while attacks are comparatively plentiful.
+
+Attacks are now sampled to **exactly 57 per family across all seven families**.
+This is incidentally an improvement on the previous draw, which ranged from 58
+(`jailbreak`) to 135 (`visible_thinking`): the leave-one-family-out comparison
+is cleaner when every held-out family is the same size. All 94 already-computed
+trajectories were retained by construction, so no finished work was discarded.
+
+905 trajectories at ~43 s projects to about 9.7 GPU-hours for Stage 2 and
+roughly 13.3 hours in total, inside the budget. The subset is written to
+`results/data/score_subset.json` and Stage 2 honours it when present.

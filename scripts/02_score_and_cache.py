@@ -37,8 +37,24 @@ CELL = "scores"
 
 
 def load_inputs() -> tuple[pd.DataFrame, dict[str, str]]:
+    """Load metadata and rendered text, honouring an optional scoring subset.
+
+    `results/data/score_subset.json`, when present, restricts scoring to a
+    chosen set of trajectories. It exists for cost discipline: see DECISIONS.md
+    D-029. Absent, everything in metadata.csv is scored.
+    """
     d = cell_dir("data")
     meta = pd.read_csv(os.path.join(d, "metadata.csv"))
+    subset_path = os.path.join(d, "score_subset.json")
+    if os.path.exists(subset_path):
+        with open(subset_path) as fh:
+            keep = set(json.load(fh))
+        before = len(meta)
+        meta = meta[meta.traj_id.isin(keep)]
+        get_logger().info(
+            f"scoring subset active: {len(meta)} of {before} trajectories "
+            f"({int((meta.label == 0).sum())} benign / {int((meta.label == 1).sum())} attack)"
+        )
     texts: dict[str, str] = {}
     with open(os.path.join(d, "trajectories.jsonl"), encoding="utf-8") as fh:
         for line in fh:

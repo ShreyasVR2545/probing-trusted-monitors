@@ -9,3 +9,6 @@
 07:34:02 | INFO    | [power] start: GPU 53.0C, 11.29W (limit NoneW), cooldown 1.5s, thermal ceiling 84C
 07:41:41 | INFO    |   10/1110 (45.9s/traj, ~840.7 min left, cache 0.011 GB)
 07:46:41 | INFO    |   20/1110 (37.9s/traj, ~689.2 min left, cache 0.013 GB)
+07:54:32 | INFO    |   30/1110 (41.0s/traj, ~738.0 min left, cache 0.015 GB)
+08:04:56 | INFO    |   40/1110 (46.3s/traj, ~826.5 min left, cache 0.017 GB)
+08:10:07 | INFO    |   50/1110 (43.3s/traj, ~764.9 min left, cache 0.019 GB)
