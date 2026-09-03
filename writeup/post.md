@@ -250,6 +250,56 @@ the structure-baseline result above.
 
 ---
 
+## mrt's labels are recoverable without reading the trajectory
+
+The structure-baseline result above is not really a fact about my channels. It
+is a fact about the dataset, and it generalises past this project.
+
+Four signals recover mrt's class labels. Three of them read **no content at
+all** — they are functions of how each trajectory was generated, not of what the
+agent did:
+
+| Signal | Reads content? | AUROC | Population |
+|---|---|---|---|
+| Agent identity alone | no | **0.805** | full sample, n=905 |
+| Trajectory structure, cross-fitted | no | **0.765** | matched subset, n=299 |
+| Thinking-block presence alone | no | **0.758** | full sample, n=905 |
+| This project's 7B monitor (emitted) | yes | 0.655 | full sample, n=905 |
+| **mrt's own frontier monitor** | yes | **0.621** | full sample, n=1,138 |
+
+"Trajectory structure" is a logistic regression on message count, rendered size
+and elision counts, cross-fitted 5-fold. "Agent identity" is the per-model
+attack rate, using no text whatsoever.
+
+**The best attack detector in this entire experiment does not read the
+trajectory.** Every metadata signal outranks both content-reading monitors,
+including the frontier model mrt itself used.
+
+The mechanism is documented in detail earlier in this post and is not subtle:
+benign and attack trajectories were produced by different generation pipelines.
+`claude-3-5-haiku` contributed 105 benign runs and 0 attacks; `gemini-2.5-pro`
+contributed 17 attacks and 0 benign. Not one of the 175 benign trajectories in
+the agent-restricted subset contains a `<model_thinking>` block, because benign
+runs were generated without a thinking scaffold and most attack families with
+one. Those choices are invisible in the trajectory text but are perfectly
+legible in its shape and style.
+
+**What this means if you use mrt.** An uncontrolled monitor comparison on this
+dataset is partly measuring generation artefacts rather than detection ability.
+At minimum, control for the generating model and for scaffold presence, and
+report a structure-only baseline alongside your monitor. If your monitor does
+not beat 0.765 on a matched subset, you have not yet shown it is reading the
+attack.
+
+**This is not a criticism of the dataset.** mrt was built as a *monitor
+red-teaming* resource — a corpus of attacks adversarially optimised to evade
+monitors — and it is entirely fit for that purpose. Its per-family structure is
+exactly what you want for red-teaming: `naive` attacks are caught at 0.878 while
+`monitor_manipulation` sits at 0.349, below chance. The leakage only bites when
+the corpus is repurposed as a *detection* benchmark and the two classes are
+compared directly, which is what this project tried to do. That repurposing is
+the error, and it was mine.
+
 ## What this means for control protocols
 
 **Stop taking the argmax.** One line of code. You already run the forward pass

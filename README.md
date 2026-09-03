@@ -104,6 +104,15 @@ failure rather than a like-for-like loss — but the paired within-channel resul
 above is unaffected, being computed on identical trajectories with identical
 (zero) supervision.
 
+**The dataset finding, which may matter more than the channel result:** mrt's
+class labels are recoverable **without reading the trajectory**, more accurately
+than by reading it. Agent identity alone gives 0.805, structure alone 0.765,
+thinking-block presence alone 0.758 — against 0.655 for this project's monitor
+and 0.621 for mrt's own frontier monitor. Benign and attack trajectories came
+from different generation pipelines. Anyone evaluating a monitor on mrt should
+control for generating model and scaffold and report a structure-only baseline;
+see [`writeup/post.md`](writeup/post.md).
+
 **A control worth adopting:** fit your probe at the **first decoder block** as
 well as your best layer. Here, mean-pooled activations separate the classes at
 **0.976 after one block** and 0.996 at the best layer — twenty-six further
