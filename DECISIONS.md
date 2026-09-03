@@ -652,3 +652,34 @@ subset (D-031). The confounded numbers are kept and reported as a negative
 methodological result, because "a linear probe on a trusted monitor's
 activations can score 0.99 by reading which model wrote the transcript" is a
 genuinely useful warning for anyone building white-box monitoring.
+
+### D-031 — Corrected analysis: restricted to a single generating agent
+**2026-09-03.** The confounded run is archived under `results_confounded/` and
+`figures_confounded/` so it stays reproducible and reportable. Stages 3-5 are
+re-run with `analysis.restrict_agent_models = [claude-3-5-sonnet-20241022]`.
+
+**Why a single model rather than a balanced pair.** The two models with both
+labels well represented are `claude-3-5-sonnet-20241022` (175 benign / 286
+attack) and `gemini-2.5-pro-preview-03-25` (76 / 51). Keeping both would give
+588 trajectories, but their attack rates differ (0.62 vs 0.40), so agent
+identity would still carry information about the label and a probe could still
+partly exploit it. Restricting to one model removes the shortcut **by
+construction** rather than by degree, at the cost of sample size: 461
+trajectories, 175 benign, 286 attack.
+
+The price is paid mostly in the tail: 175 negatives puts the lowest expressible
+false-positive rate at 1/175 = 5.7e-3. The resolution-floor comparison, which is
+the primary RQ1 evidence (D-017), is unaffected in kind — the emitted score's
+floor was 0.073, an order of magnitude above this limit.
+
+**The restriction is applied at analysis time, not at scoring time.** The
+activation cache still covers all 905 trajectories, so the confounded run
+remains reproducible and the restriction can be varied without any GPU work.
+
+**Layer 0 becomes a standing control.** The decisive diagnostic was that a probe
+on layer-0 (embedding) activations scored 0.993: no monitor computation exists
+at layer 0, so anything decodable there is surface text statistics. The
+per-layer profile already sweeps layer 0, and the writeup now reports it
+explicitly as a shortcut detector rather than as one point on a curve. Any
+future probe result where layer 0 rivals the best layer should be treated as
+confounded until shown otherwise.
