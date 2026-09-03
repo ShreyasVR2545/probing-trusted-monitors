@@ -1,22 +1,36 @@
 #!/usr/bin/env bash
-# Wait for stage 2 to complete, then run stages 3-6. Stage 2 is launched
-# separately because it is the long pole; this picks up behind it so the whole
-# pipeline finishes unattended.
+# Wait for stage 2, then run stages 3-6 unattended.
+#
+# Liveness is judged from results/heartbeat.json, which stage 2 fsyncs before
+# each trajectory. "Is any python running" is not a usable check -- it matched
+# unrelated interpreters and caused two stage-2 instances to compete for the
+# GPU. A heartbeat older than STALE_S with the manifest still incomplete means
+# the run really did die (the expected cause being a host reset), and only then
+# is it resumed.
 set -u
 PY=".venv/Scripts/python.exe"
 MAN="results/scores/primary/manifest.json"
-echo "waiting for stage 2 to complete..."
-while true; do
-  if [ -f "$MAN" ] && grep -q '"status": "complete"' "$MAN"; then break; fi
-  # If stage 2 died without completing, retry it -- a host reset is the
-  # expected failure mode here and the cache makes it cheap to resume.
-  if ! tasklist 2>/dev/null | grep -qi "python.exe"; then
-    echo "stage 2 not running and not complete; resuming $(date +%H:%M:%S)"
+HB="results/heartbeat.json"
+STALE_S=600
+
+complete() { [ -f "$MAN" ] && grep -q '"status": "complete"' "$MAN"; }
+
+echo "waiting for stage 2 $(date +%H:%M:%S)"
+while ! complete; do
+  sleep 60
+  complete && break
+  if [ -f "$HB" ]; then
+    age=$(( $(date +%s) - $(stat -c %Y "$HB") ))
+  else
+    age=$STALE_S
+  fi
+  if [ "$age" -ge "$STALE_S" ]; then
+    echo "heartbeat stale (${age}s) and stage 2 incomplete -- resuming $(date +%H:%M:%S)"
     "$PY" -u scripts/run_all.py --stage 2 --pass-gates >> results/stage2.out 2>&1
   fi
-  sleep 60
 done
 echo "=== stage 2 complete $(date +%H:%M:%S) ==="
+
 for stage in 3 4 5 6; do
   ok=0
   for attempt in 1 2 3; do

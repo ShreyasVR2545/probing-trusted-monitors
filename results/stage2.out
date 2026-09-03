@@ -1,38 +1,11 @@
-07:20:59 | INFO    | ### stage 2: score and cache activations
-07:21:06 | INFO    | scoring with Qwen/Qwen2.5-7B-Instruct / prompt=specific
-07:21:06 | INFO    | === stage 02_score_and_cache: start ===
-Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|##5       | 1/4 [00:03<00:11,  3.94s/it]Loading checkpoint shards:  50%|#####     | 2/4 [00:07<00:07,  3.93s/it]Loading checkpoint shards:  75%|#######5  | 3/4 [00:12<00:04,  4.04s/it]Loading checkpoint shards: 100%|##########| 4/4 [00:15<00:00,  3.68s/it]Loading checkpoint shards: 100%|##########| 4/4 [00:15<00:00,  3.79s/it]
-07:21:26 | INFO    | 28 layers, capturing 15 (stride 2); score trie {'n_candidates': 101, 'n_nodes': 102, 'tokens_per_candidate': {1: 10, 2: 90, 3: 1}, 'max_depth': 3, 'example_100': [16, 15, 15], 'example_95': [24, 20]}
-07:21:26 | INFO    | resuming: 14 trajectories already cached
-07:21:26 | INFO    | 1140 trajectories to score
-07:21:26 | INFO    | [power] CPU max processor state 100% -> 70% for this run
-07:21:26 | INFO    | [power] start: GPU 55.0C, 8.62W (limit NoneW), cooldown 1.5s, thermal ceiling 84C
-07:26:25 | INFO    |   10/1140 (29.9s/traj, ~562.3 min left, cache 0.005 GB)
-07:30:20 | INFO    |   20/1140 (26.7s/traj, ~498.7 min left, cache 0.007 GB)
-07:32:24 | INFO    |   30/1140 (21.9s/traj, ~405.9 min left, cache 0.009 GB)
-07:32:31 | INFO    | [power] restored CPU max processor state to 100%
-07:32:31 | INFO    | [power] paused 0 times for cooling, 45s total
-07:32:31 | ERROR   | [cell scores::primary] FAILED: FileNotFoundError(2, 'No such file or directory')
-07:32:31 | INFO    | === stage 02_score_and_cache: done in 684.81s (peak GPU 6.809 GB) ===
-Traceback (most recent call last):
-  File "C:\Users\Shreyas\probing-trusted-monitors\scripts/02_score_and_cache.py", line 165, in <module>
-    raise SystemExit(main())
-                     ^^^^^^
-  File "C:\Users\Shreyas\probing-trusted-monitors\scripts/02_score_and_cache.py", line 128, in main
-    store.save(r["traj_id"], res.activations)
-  File "C:\Users\Shreyas\probing-trusted-monitors\src\monitor\activations.py", line 155, in save
-    np.save(self.path(traj_id, rep), captured[rep].astype(np.float16))
-  File "C:\Users\Shreyas\probing-trusted-monitors\.venv\Lib\site-packages\numpy\lib\_npyio_impl.py", line 577, in save
-    file_ctx = open(file, "wb")
-               ^^^^^^^^^^^^^^^^
-FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\Shreyas\\probing-trusted-monitors\\results\\scores\\activations\\primary\\score_pos\\api_key_calendar_agendas_2__transcripts_no_hint_selective_thinking_time_likert_superlowprior_thinking__claude-3-5-sonnet-20241022__claude-3-5-sonnet-20241022__transcript_5.npy'
-07:32:33 | ERROR   | stage 2 failed with exit code 1
-07:32:44 | INFO    | ### stage 2: score and cache activations
-07:32:51 | INFO    | scoring with Qwen/Qwen2.5-7B-Instruct / prompt=specific
-07:32:51 | INFO    | === stage 02_score_and_cache: start ===
-Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|##5       | 1/4 [00:04<00:12,  4.20s/it]Loading checkpoint shards:  50%|#####     | 2/4 [00:08<00:08,  4.02s/it]Loading checkpoint shards:  75%|#######5  | 3/4 [00:11<00:03,  3.79s/it]Loading checkpoint shards: 100%|##########| 4/4 [00:15<00:00,  3.71s/it]Loading checkpoint shards: 100%|##########| 4/4 [00:15<00:00,  3.80s/it]
-07:33:11 | INFO    | 28 layers, capturing 15 (stride 2); score trie {'n_candidates': 101, 'n_nodes': 102, 'tokens_per_candidate': {1: 10, 2: 90, 3: 1}, 'max_depth': 3, 'example_100': [16, 15, 15], 'example_95': [24, 20]}
-07:33:11 | INFO    | resuming: 44 trajectories already cached
-07:33:11 | INFO    | 1110 trajectories to score
-07:33:11 | INFO    | [power] CPU max processor state 100% -> 70% for this run
-07:33:11 | INFO    | [power] start: GPU 57.0C, 14.0W (limit NoneW), cooldown 1.5s, thermal ceiling 84C
+07:33:36 | INFO    | ### stage 2: score and cache activations
+07:33:42 | INFO    | scoring with Qwen/Qwen2.5-7B-Instruct / prompt=specific
+07:33:42 | INFO    | === stage 02_score_and_cache: start ===
+Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|##5       | 1/4 [00:04<00:12,  4.02s/it]Loading checkpoint shards:  50%|#####     | 2/4 [00:07<00:07,  3.90s/it]Loading checkpoint shards:  75%|#######5  | 3/4 [00:11<00:03,  3.96s/it]Loading checkpoint shards: 100%|##########| 4/4 [00:15<00:00,  3.85s/it]Loading checkpoint shards: 100%|##########| 4/4 [00:15<00:00,  3.89s/it]
+07:34:02 | INFO    | 28 layers, capturing 15 (stride 2); score trie {'n_candidates': 101, 'n_nodes': 102, 'tokens_per_candidate': {1: 10, 2: 90, 3: 1}, 'max_depth': 3, 'example_100': [16, 15, 15], 'example_95': [24, 20]}
+07:34:02 | INFO    | resuming: 44 trajectories already cached
+07:34:02 | INFO    | 1110 trajectories to score
+07:34:02 | INFO    | [power] CPU max processor state 100% -> 70% for this run
+07:34:02 | INFO    | [power] start: GPU 53.0C, 11.29W (limit NoneW), cooldown 1.5s, thermal ceiling 84C
+07:41:41 | INFO    |   10/1110 (45.9s/traj, ~840.7 min left, cache 0.011 GB)
+07:46:41 | INFO    |   20/1110 (37.9s/traj, ~689.2 min left, cache 0.013 GB)
