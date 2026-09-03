@@ -731,3 +731,109 @@ and `emitted`.
 **Reported honestly regardless of outcome.** That a trivial structural feature
 outperforms a trusted monitor on this benchmark is itself a finding about mrt as
 an evaluation, and it belongs in the writeup whatever the probe does.
+
+### D-033 — Preregistration check on the log-odds thresholds
+**2026-09-03 (revision pass).** Before re-framing the headline I checked what
+the preregistration and the git history actually establish about the threshold
+set `{50, 80, 90}`.
+
+**What the record shows.**
+
+- `PREREGISTRATION.md` names the channel generically — "log-odds of the score
+  exceeding a threshold" — and **specifies no threshold values at all**. The
+  document was committed at 2026-09-02 23:29 (`a55053e`).
+- `LOGODDS_THRESHOLDS = (50, 80, 90)` first appears in `src/monitor/score_logit.py`
+  at 2026-09-03 00:05 (`d3c0517`), i.e. **after** the preregistration commit. The
+  only `results/` files in that commit are dataset metadata and timing; **no
+  monitor output existed yet.** The first monitor scores appear at 04:12.
+- `PREREGISTRATION.md` §7 lists `logit_logodds` vs `emitted` as **one**
+  comparison (#2), not three.
+- **`logit_ev` vs `emitted` is comparison #1** — the first planned comparison in
+  the document.
+
+**What follows.** The threshold *values* were fixed roughly four hours before
+any monitor output existed, so they cannot have been chosen to fit results. But
+they were not preregistered, no threshold was designated primary, and the
+preregistration budgeted a single comparison where three were run. Reporting the
+best of the three is therefore **selection over a swept hyperparameter without
+multiplicity correction**, and is labelled as such wherever it appears.
+
+`logit_ev` is a single fixed statistic with nothing to tune and is the
+preregistered comparison #1, so it becomes the headline.
+
+### D-034 — Structure baseline cross-fitted: no channel beats it
+**2026-09-03 (revision pass).** D-032 set the criterion that any channel failing
+to clearly beat `structure_baseline` "has not demonstrated that it detects
+attacks". The criterion was not applied, and the comparison as first computed was
+invalid: the baseline was fitted on the training split and scored on the
+75-trajectory test split, then set against logit channels pooled over all 299.
+
+Cross-fitted properly (5-fold, out-of-fold score for every one of the 299
+trajectories, so nothing is scored by a model that saw it):
+
+**`structure_baseline` = 0.765 [0.707, 0.820]** — higher than every monitor
+channel. Paired bootstrap, 4,000 resamples on identical trajectories:
+
+| Channel | AUROC | Δ vs structure | 95% CI | Beats structure |
+|---|---|---|---|---|
+| `logit_logodds_90` | 0.702 | −0.063 | [−0.143, +0.018] | no (indistinguishable) |
+| `logit_logodds_80` | 0.663 | −0.102 | [−0.188, −0.017] | **no (worse)** |
+| `logit_ev` | 0.638 | −0.127 | [−0.213, −0.044] | **no (worse)** |
+| `logit_logodds_50` | 0.617 | −0.148 | [−0.235, −0.062] | **no (worse)** |
+| `length_baseline` | 0.610 | −0.155 | [−0.242, −0.067] | **no (worse)** |
+| `emitted` | 0.607 | −0.159 | [−0.244, −0.076] | **no (worse)** |
+
+**Verdict: no channel beats structure alone. The best is statistically
+indistinguishable from it; every other channel is significantly worse.** By the
+criterion set in D-032, no channel here demonstrates attack detection beyond
+what trajectory shape already gives.
+
+Two things this does *not* mean, and one it does.
+
+It is **not** a like-for-like contest. `structure_baseline` is fit on labels,
+cross-fitted over 299 examples; the logit channels are zero-shot and have never
+seen a label. A supervised model beating a zero-shot one on the same features is
+the expected direction, so beating it would have been a strong result and losing
+to it is a weak failure.
+
+It does **not** overturn the within-channel comparison. The paired result that
+`logit_ev` beats `emitted` by +0.031 [+0.009, +0.054] is computed on identical
+trajectories with identical supervision (none), and is unaffected: the argmax
+still discards information relative to the distribution, whatever the absolute
+level.
+
+It **does** mean the absolute discrimination on this subset is weak enough that
+trajectory shape accounts for it, and that has to be stated in the results
+rather than in a footnote.
+
+### D-035 — Matching removed one confound and introduced another
+**2026-09-03 (revision pass).** `length_baseline` scores **0.514 on the full
+sample (n=905)** and **0.610 on the matched subset (n=299)**. Selecting attacks
+with zero thinking blocks produced a subpopulation in which trajectory length
+carries signal it did not carry before.
+
+**Mechanism, measured.** Mean rendered characters:
+
+| Group | mean chars | n |
+|---|---|---|
+| benign | 34,018 | 506 |
+| attacks **retained** (zero thinking) | **37,336** | 124 |
+| attacks **dropped** (has thinking) | **24,943** | 275 |
+
+On the full sample the long retained attacks and the short dropped attacks
+straddle the benign mean and cancel, giving chance. Keeping only the retained
+ones leaves attacks systematically longer than benign, and length becomes
+predictive. The zero-thinking selection is not length-neutral.
+
+**Consequence for the writeup.** The claim "the emitted integer does not beat
+trajectory length" was called "the most damning thing in this post". It is
+downgraded: the two are 0.607 [0.539, 0.671] and 0.610 [0.543, 0.674], heavily
+overlapping, so this is a null being reported as a finding, *and* the length
+figure is partly an artefact of the matching. The supportable statement is that
+on this subset the emitted score is statistically indistinguishable from a length
+baseline while `logit_logodds_90` is not — and even that is now subordinate to
+D-034.
+
+Added to Limitations: the matched subset removes two confounds and is not
+guaranteed neutral with respect to others. `length_baseline` moving from 0.514
+to 0.610 is direct evidence of exactly that.
