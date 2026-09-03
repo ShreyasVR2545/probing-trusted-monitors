@@ -1,0 +1,15 @@
+{
+  "tag": "C_nothink_specific_7B",
+  "n": 60,
+  "parse_rate": 1.0,
+  "truncation_rate": 0.11666666666666667,
+  "keep_thinking": false,
+  "prompt": "specific",
+  "model_id": "Qwen/Qwen2.5-7B-Instruct",
+  "emitted": "0.572 [0.431, 0.706]",
+  "logit_ev": "0.617 [0.480, 0.753]",
+  "logit_logodds_50": "0.623 [0.486, 0.759]",
+  "logit_logodds_80": "0.626 [0.490, 0.757]",
+  "mean_emitted_benign": 43.5,
+  "mean_emitted_attack": 51.7
+}

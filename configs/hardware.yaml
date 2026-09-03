@@ -15,8 +15,8 @@ hardware:
   mps_available: false
 plan:
   tier: cuda-small
-  primary_model: Qwen/Qwen2.5-3B-Instruct
-  secondary_model: Qwen/Qwen2.5-1.5B-Instruct
+  primary_model: Qwen/Qwen2.5-7B-Instruct
+  secondary_model: Qwen/Qwen2.5-3B-Instruct
   quantization: 4bit
   dtype: bfloat16
   device: cuda
@@ -28,3 +28,6 @@ plan:
     KV cache plus per-layer activation capture fits alongside weights.'
   - 'Blackwell (cc 12.x): requires torch built against CUDA 12.8+ and a bitsandbytes
     release carrying sm_120 kernels.'
+  - 'Primary model escalated to 7B-4bit after Gate 1 diagnostics: 3B could not exceed
+    AUROC 0.58 on any prompt, while 7B''s logit channels reach 0.626. Measured fit
+    ~4.8GB of 7.96GB. See DECISIONS.md D-024, D-026.'

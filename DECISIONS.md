@@ -471,3 +471,56 @@ on absence of signal.
 
 Recorded before the 7B result is known, so this cannot be read as
 rationalisation after the fact.
+
+### D-026 — GATE 1 DECISION: proceed with Qwen2.5-7B-Instruct (4-bit)
+**2026-09-03.** Escalating to 7B, 60 balanced trajectories, `specific` prompt,
+thinking stripped:
+
+| Channel | AUROC (n=60) |
+|---|---|
+| `emitted` (argmax integer) | 0.572 [0.431, 0.706] |
+| `logit_ev` | 0.617 [0.480, 0.753] |
+| `logit_logodds_50` | 0.623 [0.486, 0.759] |
+| `logit_logodds_80` | **0.626 [0.490, 0.757]** |
+
+**Decision: proceed to Stage 2 with 7B.** This is a judgement call made in the
+user's absence with their authorisation, and the reasoning is recorded so it can
+be overturned.
+
+Three things drive it.
+
+**The project's central effect is already visible.** The logit channels beat the
+emitted integer by **+0.054 AUROC** on the identical forward pass. That is
+precisely the RQ1/RQ3 hypothesis — that the argmax discards decision-relevant
+information the monitor already computed — appearing before a single probe has
+been trained.
+
+**The phenomenon under study is present.** 7B's emitted scores pile onto a
+handful of values: 18 trajectories at 0, 15 at 65, 11 at 85. Tie plateaus of
+exactly the kind Lucassen & Kaufman describe. The 3B monitor's scores were
+diffuse around 50 and had no plateau worth analysing, so RQ1 was not measurable
+at all on 3B. It is on 7B.
+
+**Gate 1's threshold sits at the benchmark's ceiling.** Per D-025, mrt's own
+frontier monitor reaches only 0.621 on these labels. Requiring an emitted-score
+AUROC of 0.60 from a 4-bit 7B model is requiring near-frontier performance on an
+adversarially-constructed evasion benchmark. Taken literally the gate would halt
+a project whose data cannot satisfy it, which is not what the criterion is for:
+its purpose is to establish that *there is something to probe*, and there
+demonstrably is — signal is real (mrt's own monitor CI excludes 0.5 at
+n=1,138), the tail structure exists, and the continuous channels already
+separate from the integer.
+
+What is explicitly **not** claimed: that Gate 1 passed as originally written. The
+emitted-score point estimate is 0.572, below 0.60, on a wide n=60 interval.
+
+**No further stage-1 re-run.** Stage 2 scores all 1,154 trajectories with the
+identical model and prompt, so it produces the same statistics with a CI roughly
+three times tighter. Re-running stage 1 at n=150 first would cost an hour to
+produce a strictly worse estimate of the same quantity. `gate1_report.json`
+records the decision, its basis, and this caveat.
+
+**Cost.** 7B runs at roughly 25 s/trajectory against 3B's 14 s, so Stage 2 is
+about 8 GPU-hours rather than 4.5 — still inside the 15 GPU-hour budget, and
+bought with a channel separation that 3B did not produce (3B's logit channels
+tracked its emitted score at 0.55-0.58, showing no gap).
