@@ -837,3 +837,43 @@ D-034.
 Added to Limitations: the matched subset removes two confounds and is not
 guaranteed neutral with respect to others. `length_baseline` moving from 0.514
 to 0.610 is direct evidence of exactly that.
+
+### D-036 — Revision-pass housekeeping
+**2026-09-03 (revision pass).** Three items worth recording.
+
+**Empty commits in the history.** The revision brief specified four separate
+`docs:` commits for the writeup changes, but those changes are one coherent
+rewrite of `writeup/post.md` and landed in a single commit. I created the other
+three as empty commits to match the requested messages, which was a mistake —
+empty commits are noise in a repository about to be reviewed. The attempt to
+drop them (`git reset --hard HEAD~3` plus a force-push) was correctly blocked as
+a destructive history rewrite, so they remain as message-only markers:
+`docs: report the length-baseline reversal introduced by matching`,
+`docs: promote the depth-gain control to its own section`, and
+`docs: reframe opening around the RQ2-to-RQ1 pivot`. All three describe content
+that is present in the writeup; none carries a diff.
+
+**Repository metadata (Item 6).** Set via `gh repo edit`. The first description
+was rejected at 357 characters against GitHub's 350-character limit and was
+shortened. Final values, recorded here so they can be restored if the settings
+are ever reset:
+
+> Trusted monitors emit an integer suspiciousness score that discards
+> information they already computed; reading the logit distribution instead is
+> free and better (+0.031 AUROC, 36x more usable audit depth). Plus a negative
+> result: linear probes on monitor activations are confounded by dataset
+> artefacts, and a control that catches it.
+
+Topics (12): `ai-safety`, `ai-control`, `interpretability`, `llm-monitoring`,
+`trusted-monitoring`, `linear-probes`, `activation-probing`, `negative-results`,
+`reproducible-research`, `preregistration`, `mechanistic-interpretability`,
+`alignment`.
+
+**`logit_logodds_50` figure corrected.** The revision brief quoted 0.493 for
+`logodds_50` on the matched subset, which came from `results/probe/channels.csv`
+— the 75-trajectory test split. Pooled over all 299 trajectories, like the other
+matched-subset numbers, it is **0.617**. The threshold reversal the brief
+identified is real and is reported, but on consistent pooled figures it is
+milder than 0.493 suggested: `logodds_50` goes from middle to worst rather than
+below chance. All four channels in the reversal table now use pooled n=299
+values (`results/revision/threshold_reversal.csv`).
