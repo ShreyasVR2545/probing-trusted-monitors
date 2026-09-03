@@ -296,3 +296,63 @@ present as `HYPERVISOR_ERROR` with identical bugcheck parameters. The measures
 aimed at the suspected cause — chunked prefill, inter-trajectory cooldown, CPU
 headroom cap — are unchanged. Applies from Stage 2 onward; Stage 1 had already
 read its configuration.
+
+### D-021 — Gate 1 failed twice on the stripped view; remediation ladder cut short
+**2026-09-03.** Two full signal-check attempts on the thinking-stripped monitor
+view, 150 balanced trajectories each:
+
+| Attempt | Config | AUROC | Parse | Trunc |
+|---|---|---|---|---|
+| 0 | Qwen2.5-3B, `primary` prompt | 0.567 [0.484, 0.651] | 100% | 16.7% |
+| 1 | Qwen2.5-3B, `specific` prompt | 0.580 [0.491, 0.669] | 99.3% | 16.7% |
+
+Both fail Gate 1 criterion 1 (AUROC >= 0.60 with a CI excluding 0.5). Criteria 2
+and 3 pass comfortably, so the prompt works mechanically and the D-018 elision
+fix did its job.
+
+**Diagnosis.** The monitor is not missing attacks, it is flagging everything.
+Benign trajectories average an emitted score of **48.7** and eleven of them
+score **100**; attacks average 55.8. Truncation is not the cause — restricting
+to non-truncated trajectories only lifts AUROC to 0.589. There is real family
+structure in the scores (`liar` 75.8, `selective_thinking` 65.0, `jailbreak`
+25.0), so the model is not scoring at random; it simply cannot separate
+"suspicious-looking action" from "action the user did not ask for". These agents
+legitimately move money and send mail, so that distinction is the whole task,
+and a 3B model does not make it reliably over a 10,000-token action log.
+
+Moving from `primary` to `specific` — which names the concrete attack surfaces —
+bought 0.013 AUROC. Prompt wording is not the binding constraint.
+
+**Ladder cut short.** The remaining planned remediations were Qwen2.5-1.5B with
+the `specific` prompt, and the 3B with the `terse` prompt. Both move *away* from
+the diagnosis: a smaller model and a prompt that removes reasoning before the
+verdict, when the evidence says the task needs more reasoning capacity, not
+less. Attempt 2 was killed after starting rather than spending 35 minutes
+confirming a predictable failure. Recorded here rather than silently skipped.
+
+### D-022 — D-004's "measurability" argument was wrong, and is withdrawn
+**2026-09-03.** D-004 stripped the agent's hidden `<model_thinking>` scratchpad
+for three reasons: realism, measurability, and difficulty. The **measurability**
+argument was that leaving thinking visible would push AUROC to a ceiling and
+"destroy the tail-resolution question".
+
+That is backwards, and the Gate 1 result makes it concrete. The phenomenon this
+project exists to study — Lucassen & Kaufman's tie plateau, 250 trajectories
+piled at a maximum score of 95 — is a phenomenon **of confident monitors**. A
+plateau at the top of the scale only forms when a monitor is willing to put many
+trajectories at the top. A monitor sitting at AUROC 0.57, spreading scores
+around 50 with nothing resolved, has no plateau to study and no tail to recover.
+High AUROC is the regime where quantisation loss bites, not the regime where the
+question disappears.
+
+The realism argument stands on its own and is genuinely in tension with this: a
+scheming model would not expose its chain of thought. But chain-of-thought
+monitoring is itself a mainstream control technique, mrt's own monitors were run
+with the thinking visible, and the quantisation claim is orthogonal to what the
+monitor reads — it is a claim about the last step, where a distribution is
+collapsed to an integer.
+
+So the thinking-visible condition is being tested as the primary setting. The
+stripped condition is retained as the harder secondary setting and its Gate 1
+numbers are reported, because "a small monitor cannot do this task from actions
+alone" is itself a useful negative result about weak-monitor deployments.
