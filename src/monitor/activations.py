@@ -71,9 +71,16 @@ class ActivationCapture:
             # Pooling mode: accumulate a running sum so the prefill can be fed
             # in chunks without ever holding the whole [seq, hidden] tensor for
             # every layer at once.
-            s = h[0].detach().float().sum(dim=0).cpu()
+            #
+            # The accumulator stays on the GPU. Moving it to CPU inside the hook
+            # forces a device synchronisation for every layer of every chunk --
+            # 15 layers x 16 chunks = 240 stalls per trajectory, which measured
+            # at 51.8 s/trajectory against 25 s without capture. Summing with
+            # dtype=float32 also avoids materialising a float32 copy of the
+            # whole chunk just to reduce it.
+            s = h[0].detach().sum(dim=0, dtype=torch.float32)
             prev = self._pool_sum.get(layer_idx)
-            self._pool_sum[layer_idx] = s if prev is None else prev + s
+            self._pool_sum[layer_idx] = s if prev is None else prev.add_(s)
             self._pool_count[layer_idx] = self._pool_count.get(layer_idx, 0) + h.shape[1]
         return hook
 
@@ -113,8 +120,9 @@ class ActivationCapture:
                 f"layers {idx}; the chunked prefill and the final forward disagree"
             )
         sp = torch.stack([self._score_pos[i] for i in idx]).numpy()
+        # Single device->host transfer, after the whole prefill is accumulated.
         mp = torch.stack([
-            (self._pool_sum[i] / max(self._pool_count[i], 1)).to(torch.float16)
+            (self._pool_sum[i] / max(self._pool_count[i], 1)).to(torch.float16).cpu()
             for i in idx
         ]).numpy()
         self.reset()
