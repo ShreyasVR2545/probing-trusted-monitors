@@ -239,6 +239,21 @@ than genuinely benign runs. That is what the dataset was built to contain.
 5. **Trajectory count cut from 1,154 to 905** for compute budget, protecting all
    negatives and balancing attack families. (D-029.)
 
+## Compute
+
+15.4 hours wall-clock end to end on a single RTX 5070 Laptop GPU (8 GB), of
+which roughly 11.5 are GPU-bound: 9.0 for scoring and activation caching, the
+rest for the Gate 1 attempts and configuration diagnostics. Dataset fetching
+(3.9 h) is network-bound and stages 3-6 (2.5 h) are CPU-only. Peak VRAM 6.82 GB.
+
+The host hard-reset twice under sustained load, both times with bugcheck
+`0x00020001` and identical parameters. The fix that mattered was not defensive
+tuning but an efficiency bug: the long-context prefill was running **twice** per
+trajectory. Prefilling once, in chunks, and reusing the KV cache for both
+generation and activation capture cut per-trajectory time from 33 s to 7 s and
+peak VRAM from 4.7 GB to 2.8 GB on the 3B model. `CRASH_MITIGATION.md` has the
+evidence and the mitigations.
+
 ## Reproducing
 
 Everything is at
