@@ -1,0 +1,15 @@
+{
+  "tag": "A_think_specific",
+  "n": 60,
+  "parse_rate": 1.0,
+  "truncation_rate": 0.15,
+  "keep_thinking": true,
+  "prompt": "specific",
+  "model_id": "Qwen/Qwen2.5-3B-Instruct",
+  "emitted": "0.446 [0.304, 0.589]",
+  "logit_ev": "0.456 [0.309, 0.604]",
+  "logit_logodds_50": "0.432 [0.291, 0.583]",
+  "logit_logodds_80": "0.436 [0.293, 0.582]",
+  "mean_emitted_benign": 14.666666666666666,
+  "mean_emitted_attack": 15.0
+}

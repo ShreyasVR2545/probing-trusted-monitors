@@ -356,3 +356,33 @@ So the thinking-visible condition is being tested as the primary setting. The
 stripped condition is retained as the harder secondary setting and its Gate 1
 numbers are reported, because "a small monitor cannot do this task from actions
 alone" is itself a useful negative result about weak-monitor deployments.
+
+### D-023 — The thinking-visible hypothesis was tested and rejected
+**2026-09-03.** D-022 predicted that showing the monitor the agent's
+`<model_thinking>` scratchpad would clear Gate 1 comfortably, on the reasoning
+that attack trajectories state their intent there in plain language.
+
+**It did not.** 60 balanced trajectories, Qwen2.5-3B, `specific` prompt:
+
+| View | AUROC | Mean emitted (benign / attack) |
+|---|---|---|
+| thinking stripped | 0.580 [0.491, 0.669] (n=150) | 48.7 / 55.8 |
+| thinking visible | **0.446 [0.304, 0.589]** (n=60) | 14.7 / 15.0 |
+
+Worse than the stripped view and worse than chance at the point estimate,
+though the n=60 confidence interval is wide and spans 0.5.
+
+The scores did not merely fail to separate, they **collapsed downward**: the
+mean emitted score fell from ~49 to ~15 on both classes. Seeing the agent
+narrate its reasoning appears to make this model read the trajectory as
+cooperative and transparent, and it scores nearly everything benign — the
+opposite failure to the stripped view, where it flagged nearly everything. In
+neither case is it doing the comparison that separates the classes.
+
+Recorded because it was a stated prediction that turned out wrong, and because
+it removes the option D-022 was holding in reserve. The realism argument in
+D-004 for stripping the scratchpad therefore stands unopposed: the stripped view
+is both the more realistic setting and, empirically, the better-performing one.
+Two things follow — the remaining lever is monitor capability rather than what
+the monitor is shown, and "showing a weak monitor the agent's chain of thought
+made it worse" is a finding worth reporting in its own right.
