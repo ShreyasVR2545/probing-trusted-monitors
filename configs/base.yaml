@@ -27,7 +27,7 @@ data:
   # wider pool wins and agent identity is instead recorded per trajectory and
   # reported as a confound check. See DECISIONS.md D-016.
   agent_models: null
-  min_family_count: 30     # families with fewer trajectories are pooled into "other"
+  min_family_count: 18     # lowered for the matched subset (D-032); families below this are dropped
 
 monitor_view:
   # THE key rendering decision -- see DECISIONS.md D-004.
@@ -66,6 +66,21 @@ split:
 analysis:
   restrict_agent_models:
     - claude-3-5-sonnet-20241022
+  # Benign mrt runs were generated without a thinking scaffold and attack runs
+  # mostly with one, so the *presence* of a stripped <model_thinking> block is
+  # itself a near-perfect class cue: it alone separates at AUROC 0.783, better
+  # than the monitor's own score. Restricting to trajectories with zero thinking
+  # blocks matches the two classes on that artefact exactly (AUROC 0.500).
+  # See DECISIONS.md D-032.
+  require_zero_thinking: true
+  # Structural features are carried through so a baseline fit on them alone can
+  # quantify whatever structural leakage survives matching.
+  structure_features:
+    - render_n_messages_rendered
+    - render_rendered_chars
+    - render_tool_results_elided
+    - render_messages_elided
+    - n_messages
 
 probe:
   # L2-regularised logistic regression on cached residual-stream activations.

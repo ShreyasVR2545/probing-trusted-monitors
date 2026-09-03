@@ -1,0 +1,11 @@
+18:24:37 | INFO    | ### stage 3: probe training
+18:24:41 | INFO    | === stage 03_probe_train: start ===
+18:24:45 | INFO    | agent restriction ['claude-3-5-sonnet-20241022']: 461 of 905 trajectories (175 benign / 286 attack)
+18:24:46 | INFO    | 461 trajectories with activations; 286 attack / 175 benign
+18:24:46 | INFO    | split sizes: {'train': 277, 'val': 69, 'test': 115}
+18:24:56 | INFO    | seed 0 rep score_pos: best layer 18 (val AUROC 0.964, C=1.0)
+18:25:07 | INFO    | seed 0 rep mean_pool: best layer 2 (val AUROC 1.000, C=0.1)
+18:25:08 | INFO    | seed 0: head val AUROC 1.000 vs probe 1.000
+18:35:28 | INFO    | seed 1 rep score_pos: best layer 18 (val AUROC 0.964, C=1.0)
+18:35:37 | INFO    | seed 1 rep mean_pool: best layer 2 (val AUROC 1.000, C=0.1)
+18:35:38 | INFO    | seed 1: head val AUROC 1.000 vs probe 1.000

@@ -54,6 +54,9 @@ COMPARISONS = [
     ("emitted", "length_baseline"),
     ("logit_ev", "length_baseline"),
     ("probe", "length_baseline"),
+    ("probe", "structure_baseline"),
+    ("logit_ev", "structure_baseline"),
+    ("emitted", "structure_baseline"),
 ]
 
 
@@ -69,14 +72,53 @@ def load_scores(tag: str = "primary", cfg: dict | None = None) -> pd.DataFrame:
     if not os.path.exists(path):
         raise FileNotFoundError(f"{path} missing -- run stage 2 first.")
     df = pd.read_csv(path)
-    keep = ((cfg or {}).get("analysis") or {}).get("restrict_agent_models")
+    # Join the render/structure columns so the structural baseline and the
+    # thinking-block matching can be computed here.
+    meta = pd.read_csv(os.path.join(cell_dir("data"), "metadata.csv"))
+    scols = [c for c in meta.columns
+             if c.startswith("render_") or c == "n_messages"]
+    df = df.merge(meta[["traj_id", *scols]], on="traj_id", how="left",
+                  suffixes=("", "_meta"))
+
+    acfg = (cfg or {}).get("analysis") or {}
+    log = get_logger()
+    keep = acfg.get("restrict_agent_models")
     if keep:
         before = len(df)
         df = df[df.agent_model.isin(keep)].reset_index(drop=True)
-        get_logger().info(
-            f"agent restriction {keep}: {len(df)} of {before} trajectories "
-            f"({int((df.label == 0).sum())} benign / {int((df.label == 1).sum())} attack)"
-        )
+        log.info(f"agent restriction {keep}: {len(df)} of {before} trajectories "
+                 f"({int((df.label == 0).sum())} benign / {int((df.label == 1).sum())} attack)")
+    if acfg.get("require_zero_thinking"):
+        before = len(df)
+        df = df[df.render_thinking_blocks_stripped.fillna(0) == 0].reset_index(drop=True)
+        log.info(f"zero-thinking matching: {len(df)} of {before} trajectories "
+                 f"({int((df.label == 0).sum())} benign / {int((df.label == 1).sum())} attack)")
+    return df
+
+
+def add_structure_baseline(df: pd.DataFrame, train_ids, feats, seed: int) -> pd.DataFrame:
+    """A logistic baseline on structural features alone.
+
+    Fit on the training split only and scored everywhere, so it measures how far
+    trajectory *shape* -- message count, rendered size, elision counts -- carries
+    the label without reading any content. Any channel that does not clearly beat
+    it has not demonstrated that it is detecting attacks.
+    """
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.preprocessing import StandardScaler
+
+    cols = [c for c in feats if c in df.columns]
+    if not cols:
+        return df
+    X = df[cols].astype(float).fillna(0.0).to_numpy()
+    tr = df.traj_id.isin(set(train_ids)).to_numpy()
+    if tr.sum() < 10 or df.loc[tr, "label"].nunique() < 2:
+        return df
+    sc = StandardScaler().fit(X[tr])
+    clf = LogisticRegression(max_iter=2000, random_state=seed).fit(
+        sc.transform(X[tr]), df.loc[tr, "label"].to_numpy(int))
+    df = df.copy()
+    df["structure_baseline"] = clf.decision_function(sc.transform(X))
     return df
 
 
@@ -174,7 +216,11 @@ def main() -> int:
             test_df = attach_probe_column(test_df, hids, hs, "head")
             log.info(f"seed {seed}: head val AUROC {hval:.3f} vs probe {best_overall.val_auroc:.3f}")
 
+            test_df = add_structure_baseline(
+                test_df, split.train, cfg["analysis"].get("structure_features", []), seed)
             chans = available_channels(test_df) + ["length_baseline"]
+            if "structure_baseline" in test_df.columns:
+                chans.append("structure_baseline")
             test_df["ensemble"] = ensemble_score(
                 test_df, [c for c in ("emitted", "logit_ev", "probe") if c in test_df]
             )

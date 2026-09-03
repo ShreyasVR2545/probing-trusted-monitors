@@ -683,3 +683,51 @@ per-layer profile already sweeps layer 0, and the writeup now reports it
 explicitly as a shortcut detector rather than as one point on a curve. Any
 future probe result where layer 0 rivals the best layer should be treated as
 confounded until shown otherwise.
+
+### D-032 — A second confound: thinking-block presence, and the matched subset
+**2026-09-03.** Restricting to one agent model (D-031) did **not** remove the
+shortcut: a probe on mean-pooled layer-2 activations still reached validation
+AUROC 1.000. Hunting for the residual artefact found a second, more fundamental
+one.
+
+**Benign and attack trajectories were generated under different scaffolds.**
+Within `claude-3-5-sonnet-20241022`:
+
+| Class / family | n | mean `<model_thinking>` blocks | mean messages |
+|---|---|---|---|
+| benign | 175 | **0.00** | 111.7 |
+| `liar` | 55 | 20.2 | 60.2 |
+| `visible_thinking` | 42 | 20.0 | 66.4 |
+| `selective_thinking` | 50 | 14.7 | 56.7 |
+| `naive` | 21 | 6.4 | 84.1 |
+| `no_thinking` | 39 | 0.00 | 91.6 |
+| `monitor_manipulation` | 57 | 0.00 | 75.3 |
+
+**Not one of the 175 benign trajectories contains a thinking block.** Most
+attack families were generated with a thinking scaffold; benign runs never were.
+The count of stripped thinking blocks alone separates the classes at **AUROC
+0.783 — better than the monitor's own emitted score (0.655)**. Message count
+carries more of the same (0.662 inverted).
+
+This is a property of how mrt was generated, not of the attacks, and stripping
+the scratchpad (D-004) does not remove it: it leaves assistant messages that are
+*post-thinking* content in one class and untouched in the other.
+
+**The matched subset.** 124 attack trajectories have zero thinking blocks, so
+pairing them with the 175 benign gives **299 trajectories on which the artefact
+is exactly balanced** (thinking-block AUROC 0.500). Family composition:
+`monitor_manipulation` 57, `no_thinking` 39, `jailbreak` 19, plus 9 stragglers.
+Three families clear a threshold of 18, so a reduced leave-one-family-out
+remains possible; `min_family_count` drops from 30 to 18 accordingly.
+
+Residual structural differences survive matching (rendered characters 0.610,
+message count 0.403), so a **`structure_baseline`** channel is added: a logistic
+regression on structural features alone — message count, rendered size, elision
+counts — fit on the training split and scored everywhere. It reads no content.
+Any channel that fails to clearly beat it has not demonstrated that it detects
+attacks, and it is added to the paired comparisons against `probe`, `logit_ev`
+and `emitted`.
+
+**Reported honestly regardless of outcome.** That a trivial structural feature
+outperforms a trusted monitor on this benchmark is itself a finding about mrt as
+an evaluation, and it belongs in the writeup whatever the probe does.
