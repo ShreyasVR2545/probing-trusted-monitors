@@ -1,11 +1,20 @@
 # Probing trusted monitors
 
-**Is the integer a trusted monitor emits a lossy compression of a judgement it
-has already made — and if so, does recovering the lost resolution help where
-auditing actually happens?**
+**I set out to test whether linear probes on a trusted monitor's activations
+detect attack families they were never trained on. The dataset turned out to be
+unable to support that question — a probe scoring 0.99 was reading which model
+wrote the transcript, and no amount of matching removed it. What survived is a
+smaller, deployable result: a trusted monitor's emitted integer score discards
+information the monitor already computed, and reading the logit distribution
+instead is free and measurably better (+0.031 AUROC, 36x more usable audit
+depth). Absolute discrimination on this data is weak — no channel beats a
+baseline that reads only trajectory shape — and the most transferable output is
+probably a control: if a probe at the first decoder block matches your best
+layer, you are reading the input, not the model's judgement.**
 
-> **Status: complete.** All stages ran; both gates were reported. The probe
-> arm produced a negative result and is reported as such.
+> **Status: complete.** All stages ran; both gates were reported. The probe arm
+> produced a negative result and is reported as such. Full writeup:
+> [`writeup/post.md`](writeup/post.md).
 
 ---
 
@@ -73,14 +82,34 @@ integer significantly.
 On the confound-matched subset (299 trajectories, one generating model,
 thinking-block presence matched), paired bootstrap over trajectories:
 
-| Comparison | Δ AUROC | 95% CI |
-|---|---|---|
-| `logit_logodds_90` − `emitted` | **+0.095** | [+0.049, +0.143] |
-| `logit_logodds_80` − `emitted` | **+0.056** | [+0.028, +0.086] |
-| `logit_ev` − `emitted` | **+0.031** | [+0.009, +0.054] |
+| Comparison | Δ AUROC | 95% CI | |
+|---|---|---|---|
+| **`logit_ev` − `emitted`** | **+0.031** | **[+0.009, +0.054]** | preregistered comparison #1, nothing tuned |
+| `logit_logodds_80` − `emitted` | +0.056 | [+0.028, +0.086] | swept threshold |
+| `logit_logodds_90` − `emitted` | +0.095 | [+0.049, +0.143] | **best of 3 swept thresholds; no multiplicity correction** |
 
-All three exclude zero. For scale: the emitted integer (0.607) does **not** beat
-a trajectory-length baseline (0.610); the log-odds channel (0.702) clearly does.
+`logit_ev` is the headline because it has no knob. The log-odds thresholds were
+fixed in code before any monitor output existed but were **not** preregistered,
+and which threshold wins **reverses between samples** (`logodds_90` is worst on
+the full sample, best on the matched subset) — treat any specific threshold as
+unvalidated.
+
+**Absolute discrimination is weak, and this is reported rather than buried.** A
+cross-fitted logistic baseline on trajectory *shape* alone — message count,
+rendered size, elision counts, no content — scores **0.765 [0.707, 0.820]**. No
+channel beats it: the best is statistically indistinguishable from it, every
+other channel including the monitor's own emitted score is significantly worse.
+The baseline is supervised while the channels are zero-shot, so this is a weak
+failure rather than a like-for-like loss — but the paired within-channel result
+above is unaffected, being computed on identical trajectories with identical
+(zero) supervision.
+
+**A control worth adopting:** fit your probe at the **first decoder block** as
+well as your best layer. Here, mean-pooled activations separate the classes at
+**0.976 after one block** and 0.996 at the best layer — twenty-six further
+blocks of monitoring computation add +0.020, while the monitor's own considered
+score is 0.607. If a shallow probe matches your deep one, you are reading the
+input, not the model's judgement.
 
 **Resolution (RQ1), full sample (905):** the emitted integer takes **18 distinct
 values** and cannot express any audit budget below **7.3% FPR** — its top bucket
