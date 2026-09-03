@@ -96,29 +96,40 @@ def load_scores(tag: str = "primary", cfg: dict | None = None) -> pd.DataFrame:
     return df
 
 
-def add_structure_baseline(df: pd.DataFrame, train_ids, feats, seed: int) -> pd.DataFrame:
-    """A logistic baseline on structural features alone.
+def add_structure_baseline(df: pd.DataFrame, train_ids, feats, seed: int,
+                           k: int = 5) -> pd.DataFrame:
+    """A logistic baseline on structural features alone, cross-fitted.
 
-    Fit on the training split only and scored everywhere, so it measures how far
-    trajectory *shape* -- message count, rendered size, elision counts -- carries
-    the label without reading any content. Any channel that does not clearly beat
-    it has not demonstrated that it is detecting attacks.
+    Measures how far trajectory *shape* -- message count, rendered size, elision
+    counts -- carries the label without reading any content. Any channel that
+    does not clearly beat it has not demonstrated that it detects attacks.
+
+    Cross-fitted rather than train/test split: the zero-shot channels are scored
+    on every trajectory, so a baseline scored only on the held-out split would be
+    compared against them on a different and much smaller denominator. K-fold
+    out-of-fold scoring gives every trajectory a score from a model that never
+    saw it, making the comparison like-for-like. `train_ids` is retained for
+    signature compatibility and is no longer used for fitting.
     """
+    import numpy as _np
     from sklearn.linear_model import LogisticRegression
+    from sklearn.model_selection import StratifiedKFold
     from sklearn.preprocessing import StandardScaler
 
     cols = [c for c in feats if c in df.columns]
-    if not cols:
+    if not cols or df.label.nunique() < 2 or len(df) < 2 * k:
         return df
     X = df[cols].astype(float).fillna(0.0).to_numpy()
-    tr = df.traj_id.isin(set(train_ids)).to_numpy()
-    if tr.sum() < 10 or df.loc[tr, "label"].nunique() < 2:
-        return df
-    sc = StandardScaler().fit(X[tr])
-    clf = LogisticRegression(max_iter=2000, random_state=seed).fit(
-        sc.transform(X[tr]), df.loc[tr, "label"].to_numpy(int))
+    y = df.label.to_numpy(int)
+    oof = _np.full(len(df), _np.nan)
+    for tr, te in StratifiedKFold(n_splits=k, shuffle=True,
+                                  random_state=seed).split(X, y):
+        sc = StandardScaler().fit(X[tr])
+        clf = LogisticRegression(max_iter=2000, random_state=seed).fit(
+            sc.transform(X[tr]), y[tr])
+        oof[te] = clf.decision_function(sc.transform(X[te]))
     df = df.copy()
-    df["structure_baseline"] = clf.decision_function(sc.transform(X))
+    df["structure_baseline"] = oof
     return df
 
 

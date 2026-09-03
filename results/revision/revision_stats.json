@@ -1,0 +1,54 @@
+{
+  "n": 299,
+  "n_benign": 175,
+  "n_attack": 124,
+  "structure_baseline_oof": {
+    "auroc": 0.7650691244239632,
+    "lo": 0.7074642857142858,
+    "hi": 0.8197730414746544,
+    "features": [
+      "render_n_messages_rendered",
+      "render_rendered_chars",
+      "render_tool_results_elided",
+      "render_messages_elided",
+      "n_messages"
+    ],
+    "k": 5
+  },
+  "channels_beating_structure": [],
+  "length_baseline": {
+    "full_sample": 0.5136631103450325,
+    "matched_subset": 0.6096313364055299,
+    "n_full": 905,
+    "n_matched": 299
+  },
+  "length_mechanism": {
+    "benign_mean_chars": 34018.250988142296,
+    "retained_attacks_mean_chars": 37335.756476683935,
+    "dropped_attacks_mean_chars": 24942.893203883494,
+    "n_retained": 193,
+    "n_dropped": 206
+  },
+  "threshold_reversal": [
+    {
+      "channel": "logit_ev",
+      "full_sample": 0.675,
+      "matched_subset": 0.638
+    },
+    {
+      "channel": "logit_logodds_50",
+      "full_sample": 0.666,
+      "matched_subset": 0.617
+    },
+    {
+      "channel": "logit_logodds_80",
+      "full_sample": 0.676,
+      "matched_subset": 0.663
+    },
+    {
+      "channel": "logit_logodds_90",
+      "full_sample": 0.659,
+      "matched_subset": 0.702
+    }
+  ]
+}

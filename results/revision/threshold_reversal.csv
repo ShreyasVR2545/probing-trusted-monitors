@@ -1,0 +1,5 @@
+channel,full_sample,matched_subset
+logit_ev,0.675,0.638
+logit_logodds_50,0.666,0.617
+logit_logodds_80,0.676,0.663
+logit_logodds_90,0.659,0.702
