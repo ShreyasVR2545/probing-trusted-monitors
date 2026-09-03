@@ -18,8 +18,19 @@ REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 RESULTS = os.path.join(REPO_ROOT, "results")
 
 
+def _safe_cell_dir(cell: str) -> str:
+    """Map a cell name onto a filesystem path.
+
+    Cell names are namespaced with "::" (e.g. "scores::primary") so one stage
+    can hold several conditions. Windows rejects ":" in a path, so the separator
+    becomes a subdirectory: results/scores/primary/manifest.json.
+    """
+    parts = [p for p in cell.split("::") if p]
+    return os.path.join(RESULTS, *parts)
+
+
 def manifest_path(cell: str) -> str:
-    return os.path.join(RESULTS, cell, "manifest.json")
+    return os.path.join(_safe_cell_dir(cell), "manifest.json")
 
 
 def read_manifest(cell: str) -> dict[str, Any] | None:
@@ -90,6 +101,6 @@ def cell(name: str, provenance: dict[str, Any], force: bool = False) -> Iterator
 
 
 def cell_dir(name: str) -> str:
-    path = os.path.join(RESULTS, name)
+    path = _safe_cell_dir(name)
     os.makedirs(path, exist_ok=True)
     return path

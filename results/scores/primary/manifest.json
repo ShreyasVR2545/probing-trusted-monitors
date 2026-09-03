@@ -1,0 +1,133 @@
+{
+  "cell": "scores::primary",
+  "status": "running",
+  "started": "2026-09-03T07:09:32",
+  "provenance": {
+    "seed": 0,
+    "git_sha": "00a2ba75d2839bcc819cd708dddd908c5a16fb4a-dirty",
+    "libraries": {
+      "python": "3.12.13",
+      "torch": "2.9.1+cu128",
+      "transformers": "4.57.1",
+      "numpy": "2.2.6",
+      "scipy": "1.16.3",
+      "sklearn": "1.7.2",
+      "pandas": "2.3.3",
+      "datasets": "4.4.1",
+      "bitsandbytes": "0.48.2",
+      "matplotlib": "3.10.7"
+    },
+    "config": {
+      "seed": 0,
+      "seeds": [
+        0,
+        1,
+        2
+      ],
+      "data": {
+        "dataset": "ScaleAI/mrt",
+        "revision": "main",
+        "n_signal_check": 150,
+        "n_total": 1400,
+        "n_smoke": 30,
+        "max_per_cell": 40,
+        "balance_labels": true,
+        "agent_models": null,
+        "min_family_count": 30
+      },
+      "monitor_view": {
+        "strip_agent_thinking": true,
+        "strip_agent_system_prompt": true,
+        "max_tool_result_chars": 800,
+        "max_message_chars": 3000
+      },
+      "split": {
+        "train_frac": 0.6,
+        "val_frac": 0.15,
+        "test_frac": 0.25
+      },
+      "probe": {
+        "C_grid": [
+          0.0001,
+          0.001,
+          0.01,
+          0.1,
+          1.0,
+          10.0
+        ],
+        "max_iter": 2000,
+        "standardize": true,
+        "representations": [
+          "score_pos",
+          "mean_pool"
+        ]
+      },
+      "head": {
+        "hidden_dim": 256,
+        "epochs": 60,
+        "lr": 0.001,
+        "weight_decay": 0.01,
+        "batch_size": 64,
+        "dropout": 0.2
+      },
+      "eval": {
+        "fpr_targets": [
+          0.01,
+          0.003,
+          0.0003
+        ],
+        "bootstrap_resamples": 10000,
+        "ci": 0.95
+      },
+      "power": {
+        "enabled": true,
+        "cooldown_s": 1.5,
+        "max_temp_c": 84,
+        "cpu_max_pct": 70,
+        "torch_threads": 4,
+        "prefill_chunk_tokens": 1024
+      },
+      "paths": {
+        "raw": "results/data/raw",
+        "index": "results/data/index"
+      },
+      "hardware": {
+        "hardware": {
+          "cuda_available": true,
+          "device_name": "NVIDIA GeForce RTX 5070 Laptop GPU",
+          "vram_gb": 7.96,
+          "compute_capability": [
+            12,
+            0
+          ],
+          "bf16_supported": true,
+          "torch_version": "2.9.1+cu128",
+          "cuda_version": "12.8",
+          "cpu_count": 24,
+          "ram_gb": 31.4,
+          "free_disk_gb": 509.5,
+          "platform": "Windows 11 (AMD64)",
+          "mps_available": false
+        },
+        "plan": {
+          "tier": "cuda-small",
+          "primary_model": "Qwen/Qwen2.5-7B-Instruct",
+          "secondary_model": "Qwen/Qwen2.5-3B-Instruct",
+          "quantization": "4bit",
+          "dtype": "bfloat16",
+          "device": "cuda",
+          "max_context_tokens": 16384,
+          "layer_stride": 2,
+          "run_location": "local",
+          "notes": [
+            "~8GB tier: 3B in 4-bit is primary, 1.5B secondary. Context capped at 16k so the KV cache plus per-layer activation capture fits alongside weights.",
+            "Blackwell (cc 12.x): requires torch built against CUDA 12.8+ and a bitsandbytes release carrying sm_120 kernels.",
+            "Primary model escalated to 7B-4bit after Gate 1 diagnostics: 3B could not exceed AUROC 0.58 on any prompt, while 7B's logit channels reach 0.626. Measured fit ~4.8GB of 7.96GB. See DECISIONS.md D-024, D-026."
+          ]
+        }
+      },
+      "smoke": false
+    }
+  },
+  "outputs": {}
+}
