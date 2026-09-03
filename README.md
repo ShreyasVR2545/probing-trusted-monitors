@@ -75,6 +75,15 @@ That is reported with the same care as a positive finding — see
 
 ## Results
 
+**Two claims, scoped.** The *relative* claim holds: reading the logit
+distribution beats taking the argmax by +0.031 AUROC [+0.009, +0.054], a paired
+comparison on the same tensor from the same forward pass with identical (zero)
+supervision, so dataset artefacts inflate both channels equally and cancel. The
+*absolute* claim does not: neither channel demonstrates attack detection here,
+because a structure-only baseline reaching 0.765 beats every content-reading
+channel. Use a different read-out of the computation you already run; do not read
+these numbers as evidence that the monitor detects attacks on this data.
+
 **Headline: stop taking the argmax.** Reading the monitor's distribution over
 score tokens instead of its argmax costs one forward pass and beats the emitted
 integer significantly.

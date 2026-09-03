@@ -877,3 +877,47 @@ identified is real and is reported, but on consistent pooled figures it is
 milder than 0.493 suggested: `logodds_50` goes from middle to worst rather than
 below chance. All four channels in the reversal table now use pooled n=299
 values (`results/revision/threshold_reversal.csv`).
+
+### D-037 — Publication pass: verified the four-signal table, one figure corrected
+**2026-09-03 (publication pass).** Every number in the new mrt label-leakage
+section was recomputed from the cached scores before being written.
+
+**One correction.** The revision brief's table gave thinking-block presence as
+**0.783**. That is the figure from D-032, computed *within*
+`claude-3-5-sonnet-20241022` (n=461). On the **full sample** (n=905) the same
+signal gives **0.758**. The published table uses 0.758 with the population
+stated, because the other rows in that table are full-sample figures and mixing
+populations silently would overstate the comparison.
+
+The table now carries an explicit population column, because its rows genuinely
+are not all on one sample and cannot be made so without new analysis, which this
+pass excluded. Verified values:
+
+| Signal | AUROC | Population |
+|---|---|---|
+| agent identity alone | 0.805 | full, n=905 |
+| structure, cross-fitted | 0.765 | matched, n=299 |
+| thinking-block presence | 0.758 | full, n=905 (0.783 on the n=461 agent-restricted subset) |
+| this project's monitor, emitted | 0.655 | full, n=905 |
+| mrt's own frontier monitor | 0.621 | full, n=1,138 |
+
+`structure_baseline` exists only on the matched subset; computing it on the full
+sample would have been new analysis and was out of scope. Its row is labelled
+accordingly rather than being presented as full-sample.
+
+**Framing.** The section states the leakage as information for users of the
+benchmark, not as a fault in it. mrt was built as a monitor **red-teaming**
+corpus and is fit for that: its per-family spread (`naive` 0.878 down to
+`monitor_manipulation` 0.349) is exactly what red-teaming needs. The leakage
+bites only when the corpus is repurposed as a **detection** benchmark with the
+two classes compared directly — which is what this project did, and that
+repurposing was my error, not the dataset's.
+
+**Relative/absolute scoping.** A "Two claims, scoped" section now sits directly
+after the opening pivot, stating both the paired result that survives and the
+absolute failure that does not, with the reason the two are compatible: the
+paired comparison reads the same tensor from the same forward pass with
+identical supervision, so dataset leakage inflates both channels and cancels in
+the difference. Mirrored in the README. The supervised-versus-zero-shot
+asymmetry note remains stated once, in the structure-baseline section where it
+belongs.

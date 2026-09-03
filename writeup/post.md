@@ -11,6 +11,32 @@ the monitor's *score* rather than its activations, an honest account of how weak
 that result is in absolute terms, and one methodological control that I think is
 the most transferable thing here. RQ2 was the plan; RQ1 is what survived.
 
+
+## Two claims, scoped
+
+These results point in different directions and are easy to reconcile wrongly,
+so both are stated here before the evidence.
+
+**What holds — the relative claim.** Reading the monitor's logit distribution
+beats taking its argmax: **+0.031 AUROC [+0.009, +0.054]**, the preregistered
+primary comparison. This is a *paired* comparison: the two channels are read
+from the same tensor on the same forward pass over the same trajectories, with
+identical supervision (none). Any property of the dataset — including all the
+leakage described below — inflates both channels equally and cancels in the
+difference. Nothing in this post undermines it.
+
+**What does not hold — the absolute claim.** Neither channel demonstrates attack
+*detection* on this dataset. A supervised logistic fit on trajectory shape
+alone, reading no content, reaches **0.765**, above every content-reading
+channel here and above mrt's own frontier monitor at 0.621. By the criterion I
+registered before running the comparison, nothing here has demonstrated attack
+detection in absolute terms.
+
+The relative claim is the deployable one: it says use a different read-out of a
+computation you are already performing. The absolute claim would need a dataset
+whose labels are not recoverable from generation metadata — which, as it turns
+out, this one is.
+
 ---
 
 ## The tie plateau
