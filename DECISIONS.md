@@ -544,3 +544,22 @@ same precision, only the transfer point moved.
 This was preferred to the cost-discipline fallback of cutting layer-sweep
 granularity, because it costs no information: `layer_stride` stays at 2 and the
 full per-layer profile promised in the preregistration is still produced.
+
+### D-028 — Activation filenames hashed (second Windows path-length failure)
+**2026-09-03.** Stage 2 died 30 trajectories in with `FileNotFoundError` on
+
+    results\scores\activations\primary\score_pos\api_key_calendar_agendas_2__
+    transcripts_no_hint_selective_thinking_time_likert_superlowprior_thinking__
+    claude-3-5-sonnet-20241022__claude-3-5-sonnet-20241022__transcript_5.npy
+
+which exceeds the 260-character Windows limit. This is the same failure as
+D-011, in a place I did not fix at the time: trajectory ids embed the full mrt
+directory name, and `ActivationStore` was spelling them out as filenames.
+
+Filenames are now `sha256(traj_id)[:24]` (73 characters for the full path) and
+`index.json` in the store root keeps a readable hash-to-id mapping so the cache
+stays inspectable. The 44 trajectories already computed were migrated by
+renaming rather than recomputed.
+
+The general lesson, now applied in both places: **no user-controlled or
+data-derived string goes into a path on this platform.**

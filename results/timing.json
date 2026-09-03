@@ -46,5 +46,11 @@
     "started": 1788399544.2749836,
     "wall_clock_s": 1.58,
     "peak_gpu_gb": 0.0
+  },
+  {
+    "stage": "02_score_and_cache",
+    "started": 1788400266.922406,
+    "wall_clock_s": 684.81,
+    "peak_gpu_gb": 6.809
   }
 ]

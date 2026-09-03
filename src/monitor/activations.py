@@ -18,6 +18,8 @@ layer is never held at once. Vectors are stored float16 and only every
 """
 from __future__ import annotations
 
+import hashlib
+import json
 import os
 from dataclasses import dataclass
 from typing import Any
@@ -141,11 +143,39 @@ class ActivationStore:
         self.root = root
         os.makedirs(root, exist_ok=True)
 
+    @staticmethod
+    def file_stem(traj_id: str) -> str:
+        """Short, collision-free filename for a trajectory.
+
+        Trajectory ids embed the mrt directory name, which runs past 100
+        characters; spelling them out pushed the full path beyond the
+        260-character Windows limit and stage 2 died on the first long id. The
+        id is hashed instead, and `index.json` keeps the mapping readable.
+        """
+        return hashlib.sha256(traj_id.encode("utf-8")).hexdigest()[:24]
+
     def path(self, traj_id: str, rep: str) -> str:
-        safe = traj_id.replace("|", "__").replace("/", "__")
         d = os.path.join(self.root, rep)
         os.makedirs(d, exist_ok=True)
-        return os.path.join(d, f"{safe}.npy")
+        return os.path.join(d, f"{self.file_stem(traj_id)}.npy")
+
+    def record_id(self, traj_id: str) -> None:
+        """Append to the human-readable hash -> trajectory-id index."""
+        path = os.path.join(self.root, "index.json")
+        idx: dict[str, str] = {}
+        if os.path.exists(path):
+            try:
+                with open(path) as fh:
+                    idx = json.load(fh)
+            except json.JSONDecodeError:
+                idx = {}
+        stem = self.file_stem(traj_id)
+        if idx.get(stem) != traj_id:
+            idx[stem] = traj_id
+            tmp = path + ".tmp"
+            with open(tmp, "w") as fh:
+                json.dump(idx, fh, indent=1)
+            os.replace(tmp, path)
 
     def has(self, traj_id: str, reps: tuple[str, ...] = ("score_pos", "mean_pool")) -> bool:
         return all(os.path.exists(self.path(traj_id, r)) for r in reps)
@@ -153,6 +183,7 @@ class ActivationStore:
     def save(self, traj_id: str, captured: dict[str, np.ndarray]) -> None:
         for rep in ("score_pos", "mean_pool"):
             np.save(self.path(traj_id, rep), captured[rep].astype(np.float16))
+        self.record_id(traj_id)
         layers_path = os.path.join(self.root, "layers.npy")
         if not os.path.exists(layers_path):
             np.save(layers_path, captured["layers"])
