@@ -35,6 +35,7 @@ the monitor already performed. Two cheaper-than-retraining ways to recover it:
 | `probe` | L2 logistic probe on residual-stream activations at that same position | needs labels |
 | `head` | small MLP on the same activations — a stronger comparison than zero-shot alone | needs labels |
 | `length_baseline` | rendered trajectory length used directly as a score | a confound control |
+| `structure_baseline` | logistic fit on message count, size and elision counts | a confound control |
 
 **Research questions.** **RQ1** — do the continuous channels remove the tie
 plateaus and extend usable signal further down the FPR curve? **RQ2 (headline)**
@@ -46,10 +47,15 @@ recommendation is simply *stop taking the argmax*, which is a better result
 because it is more deployable.
 
 **What this is not.** This is not a claim that probes see something the text
-does not contain. Prior work (arXiv:2509.21344) shows probes lean heavily on
-textual evidence. That critique does not bite here: the monitor's only input
-*is* text, and the claim is purely that quantising its judgement to an integer
-discards information it already computed.
+does not contain. The claim is only that quantising the monitor's judgement to
+an integer discards information it already computed.
+
+The preregistration argued that the arXiv:2509.21344 critique — that probes lean
+on textual evidence rather than privileged internal state — "does not bite here,
+because the monitor's only input is text". **That reasoning was wrong, and the
+results below refute it.** It protects the *monitor*; it says nothing about the
+*probe*, which reads activations encoding the input's surface form. The probe
+arm of this project failed for exactly that reason.
 
 **A null is a real result.** If all three channels match, the finding is that
 monitor-score quantisation is not a bottleneck and the tie plateau is cosmetic.
@@ -100,8 +106,11 @@ further blocks add **+0.001**. Details in
 
 ## Reproducing
 
-Requires an NVIDIA GPU. Hardware detection picks the model and quantisation; on
-an 8 GB card that is Qwen2.5-3B-Instruct in 4-bit. See [HARDWARE.md](HARDWARE.md).
+Requires an NVIDIA GPU. Hardware detection picks the model and quantisation. On
+an 8 GB card it selects Qwen2.5-3B-Instruct in 4-bit; the reported run uses
+**Qwen2.5-7B-Instruct in 4-bit** (~4.8 GB of 7.96 GB), escalated after 3B could
+not clear Gate 1 on any prompt — see [HARDWARE.md](HARDWARE.md) and DECISIONS.md
+D-024/D-026.
 
 ```bash
 git clone https://github.com/ShreyasVR2545/probing-trusted-monitors.git

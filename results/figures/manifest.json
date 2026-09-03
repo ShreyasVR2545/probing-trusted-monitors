@@ -1,10 +1,10 @@
 {
   "cell": "figures",
   "status": "complete",
-  "started": "2026-09-03T19:24:51",
+  "started": "2026-09-03T21:06:54",
   "provenance": {
     "seed": 0,
-    "git_sha": "86c6f3536ec0772ec3914f9d6015eeee9319d98c-dirty",
+    "git_sha": "58470cdba0c2e96501aec25d14fdafca7318e5de-dirty",
     "libraries": {
       "python": "3.12.13",
       "torch": "2.9.1+cu128",
@@ -155,6 +155,6 @@
     "failures": {},
     "figures_dir": "C:\\Users\\Shreyas\\probing-trusted-monitors\\figures"
   },
-  "finished": "2026-09-03T19:24:55",
-  "wall_clock_s": 3.91
+  "finished": "2026-09-03T21:06:58",
+  "wall_clock_s": 4.68
 }

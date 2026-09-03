@@ -186,7 +186,11 @@ def fig4_transfer_matrix(transfer_csv: str, log) -> None:
         ax.set_title(f"Probe transfer to unseen attack families (by {axis})")
         ax.legend(frameon=False, fontsize=8)
         save(fig, f"fig4_transfer_matrix_{axis}",
-             f"Figure 4. Leave-one-family-out transfer by {axis}. Grey: the probe was "
+             f"Figure 4. Leave-one-family-out transfer by {axis}. NOTE: the probe is "
+             "confounded (see Figure 6) and these numbers measure dataset artefacts, not "
+             "attack detection; they are shown because the pattern is itself diagnostic -- "
+             "near-perfect transfer across attack families alongside collapse across "
+             "environments is the signature of a shortcut. "
              "trained on data including this family. Green: this family was entirely "
              "held out of training. The gap between the pair is what the probe loses on "
              "an attack nobody anticipated -- the question a trusted monitor exists to "
@@ -225,24 +229,45 @@ def fig5_transfer_ratio(transfer_csv: str, zeroshot_csv: str, log) -> None:
              "being measured against.")
 
 
-def fig6_layer_profile(layer_csv: str, log) -> None:
+def fig6_layer_profile(layer_csv: str, log, monitor_auroc: float | None = None) -> None:
+    """The shortcut diagnostic.
+
+    A probe that is recovering the monitor's judgement should improve with depth,
+    because the judgement is what the later layers compute. A flat curve starting
+    high at layer 0 means the signal is present before any monitoring has
+    happened -- i.e. it is a surface property of the input.
+    """
     prof = pd.read_csv(layer_csv)
-    fig, ax = plt.subplots(figsize=(6, 3.6))
+    fig, ax = plt.subplots(figsize=(6.4, 3.9))
     for rep, grp in prof.groupby("representation"):
         grp = grp.sort_values("layer")
         ax.plot(grp.layer, grp.val_auroc_mean, marker="o", ms=3.5, label=rep, lw=1.5)
         if "val_auroc_min" in grp:
             ax.fill_between(grp.layer, grp.val_auroc_min, grp.val_auroc_max, alpha=0.15)
+        first, best = grp.val_auroc_mean.iloc[0], grp.val_auroc_mean.max()
+        ax.annotate(f"layer 0: {first:.3f}   best: {best:.3f}   (+{best-first:.3f})",
+                    xy=(grp.layer.iloc[0], first), xytext=(2, -14),
+                    textcoords="offset points", fontsize=7, color="#333333")
+    if monitor_auroc is not None:
+        ax.axhline(monitor_auroc, color="#000000", lw=1.2, ls="-.")
+        ax.text(prof.layer.max(), monitor_auroc + 0.012,
+                f"the monitor's own score ({monitor_auroc:.3f})",
+                fontsize=7.5, ha="right", color="#000000")
     ax.axhline(0.5, color="#cc0000", lw=1, ls="--")
-    ax.set_xlabel("Layer")
+    ax.set_xlabel("Layer (decoder block output)")
     ax.set_ylabel("Validation AUROC")
-    ax.set_title("Where attack detection is linearly decodable")
-    ax.legend(frameon=False, fontsize=8, title="Representation", title_fontsize=8)
+    ax.set_ylim(0.45, 1.02)
+    ax.set_title("Depth buys nothing: the probe is reading surface text")
+    ax.legend(frameon=False, fontsize=8, title="Representation", title_fontsize=8,
+              loc="center right")
     save(fig, "fig6_layer_profile",
-         "Figure 6. Per-layer validation AUROC for the linear probe, across all cached "
-         "layers and both representations. Shaded bands span the seeds. The full curve is "
-         "shown rather than only the best layer, because the best layer was selected on "
-         "validation and is therefore a tuned quantity.")
+         "Figure 6. Per-layer validation AUROC for the linear probe. Layer 0 is the output "
+         "of the FIRST decoder block, so almost no monitoring computation has happened "
+         "there -- yet mean-pooled activations already separate the classes near-perfectly, "
+         "and twenty-six further blocks add almost nothing. The monitor's own considered "
+         "score, after all 28 blocks, is the dash-dotted line far below. A probe recovering "
+         "the monitor's judgement would rise with depth and would not start above the "
+         "monitor. This is the diagnostic that identified the result as confounded.")
 
 
 def fig7_calibration(bins_csv: str, cal_csv: str, log) -> None:
@@ -266,6 +291,32 @@ def fig7_calibration(bins_csv: str, cal_csv: str, log) -> None:
          "fitting: the integer and expected-value scores are divided by 100, the log-odds "
          "channel goes through a logistic. The dotted line is perfect calibration. This "
          "measures whether a deployment could read these scores as probabilities as-is.")
+
+
+def _monitor_auroc(cfg: dict) -> float | None:
+    """Emitted-integer AUROC over the whole analysis subset.
+
+    Taken from the full subset rather than the 25% test split: the test split is
+    small enough that its estimate is dominated by noise (0.501 against 0.607
+    pooled), and this line is a reference point, not a paired comparison.
+    """
+    from sklearn.metrics import roc_auc_score
+
+    try:
+        df = pd.read_csv(os.path.join(cell_dir("scores"), "scores_primary.csv"))
+        meta = pd.read_csv(os.path.join(cell_dir("data"), "metadata.csv"))
+        df = df.merge(meta[["traj_id", "render_thinking_blocks_stripped"]],
+                      on="traj_id", how="left")
+        acfg = cfg.get("analysis") or {}
+        if acfg.get("restrict_agent_models"):
+            df = df[df.agent_model.isin(acfg["restrict_agent_models"])]
+        if acfg.get("require_zero_thinking"):
+            df = df[df.render_thinking_blocks_stripped.fillna(0) == 0]
+        if df.label.nunique() < 2:
+            return None
+        return float(roc_auc_score(df.label, df.emitted))
+    except (FileNotFoundError, KeyError, ValueError):
+        return None
 
 
 def main() -> int:
@@ -303,7 +354,9 @@ def main() -> int:
             ("fig4", lambda: fig4_transfer_matrix(os.path.join(tdir, "transfer_probe.csv"), log)),
             ("fig5", lambda: fig5_transfer_ratio(os.path.join(tdir, "transfer_probe.csv"),
                                                  os.path.join(tdir, "transfer_zeroshot.csv"), log)),
-            ("fig6", lambda: fig6_layer_profile(os.path.join(adir, "layer_profile.csv"), log)),
+            ("fig6", lambda: fig6_layer_profile(
+                os.path.join(adir, "layer_profile.csv"), log,
+                monitor_auroc=_monitor_auroc(cfg))),
             ("fig7", lambda: fig7_calibration(os.path.join(adir, "reliability_bins.csv"),
                                               os.path.join(adir, "calibration.csv"), log)),
         ]

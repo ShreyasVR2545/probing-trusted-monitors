@@ -112,5 +112,17 @@
     "started": 1788443687.7339268,
     "wall_clock_s": 7.69,
     "peak_gpu_gb": 0.0
+  },
+  {
+    "stage": "06_figures",
+    "started": 1788449770.1902783,
+    "wall_clock_s": 9.28,
+    "peak_gpu_gb": 0.0
+  },
+  {
+    "stage": "06_figures",
+    "started": 1788449809.8859413,
+    "wall_clock_s": 9.08,
+    "peak_gpu_gb": 0.0
   }
 ]
