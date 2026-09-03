@@ -524,3 +524,23 @@ records the decision, its basis, and this caveat.
 about 8 GPU-hours rather than 4.5 — still inside the 15 GPU-hour budget, and
 bought with a channel separation that 3B did not produce (3B's logit channels
 tracked its emitted score at 0.55-0.58, showing no gap).
+
+### D-027 — Activation pooling kept on device (51.8s -> 29.9s per trajectory)
+**2026-09-03.** Stage 2 first ran at **51.8 s/trajectory**, projecting 16.5
+GPU-hours and breaching the 15-hour budget, against ~25 s/trajectory for the
+same model without activation capture.
+
+The cause was in the pooling hook: it moved each layer's partial sum to the host
+on every chunk. With 15 captured layers and a 16k context fed in 1,024-token
+chunks that is **240 device synchronisations per trajectory**, each stalling the
+pipeline. The accumulator now stays on the GPU and a single transfer happens in
+`collect()` once the prefill is done; the reduction also sums with
+`dtype=torch.float32` rather than upcasting the whole chunk first.
+
+Measured after the change: **29.9 s/trajectory**, projecting ~9.4 GPU-hours.
+Numerically identical — the same values are summed in the same order and in the
+same precision, only the transfer point moved.
+
+This was preferred to the cost-discipline fallback of cutting layer-sweep
+granularity, because it costs no information: `layer_stride` stays at 2 and the
+full per-layer profile promised in the preregistration is still produced.
