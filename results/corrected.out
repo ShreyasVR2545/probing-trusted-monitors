@@ -9,3 +9,21 @@
 18:35:28 | INFO    | seed 1 rep score_pos: best layer 18 (val AUROC 0.964, C=1.0)
 18:35:37 | INFO    | seed 1 rep mean_pool: best layer 2 (val AUROC 1.000, C=0.1)
 18:35:38 | INFO    | seed 1: head val AUROC 1.000 vs probe 1.000
+18:42:23 | INFO    | seed 2 rep score_pos: best layer 18 (val AUROC 0.964, C=1.0)
+18:42:30 | INFO    | seed 2 rep mean_pool: best layer 2 (val AUROC 1.000, C=0.1)
+18:42:31 | INFO    | seed 2: head val AUROC 1.000 vs probe 1.000
+18:47:43 | INFO    | AUROC by channel (across seeds):
+                   auroc       
+                    mean    std
+channel                        
+emitted           0.5997  0.000
+ensemble          0.8087  0.000
+head              0.9952  0.002
+length_baseline   0.4254  0.000
+logit_ev          0.6300  0.000
+logit_logodds_50  0.6130  0.000
+logit_logodds_80  0.6562  0.000
+logit_logodds_90  0.6725  0.000
+probe             0.9978  0.000
+18:47:43 | INFO    | [cell probe] complete in 1377.37s
+18:47:43 | INFO    | === stage 03_probe_train: done in 1381.52s (peak GPU 0.0 GB) ===

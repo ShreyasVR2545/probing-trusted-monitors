@@ -4,10 +4,8 @@
 has already made — and if so, does recovering the lost resolution help where
 auditing actually happens?**
 
-> **Status: in progress.** The pipeline is complete and the data is in place.
-> Results are not yet filled in below; this README is updated as each gate is
-> passed. Nothing in the "Results" section is populated until the corresponding
-> stage has actually run.
+> **Status: complete.** All stages ran; both gates were reported. The probe
+> arm produced a negative result and is reported as such.
 
 ---
 
@@ -62,15 +60,41 @@ That is reported with the same care as a positive finding — see
 
 ## Results
 
-*Populated as stages complete. See [PREREGISTRATION.md](PREREGISTRATION.md) for
-the predictions registered before any of this ran.*
+**Headline: stop taking the argmax.** Reading the monitor's distribution over
+score tokens instead of its argmax costs one forward pass and beats the emitted
+integer significantly.
 
-| | Status |
+On the confound-matched subset (299 trajectories, one generating model,
+thinking-block presence matched), paired bootstrap over trajectories:
+
+| Comparison | Δ AUROC | 95% CI |
+|---|---|---|
+| `logit_logodds_90` − `emitted` | **+0.095** | [+0.049, +0.143] |
+| `logit_logodds_80` − `emitted` | **+0.056** | [+0.028, +0.086] |
+| `logit_ev` − `emitted` | **+0.031** | [+0.009, +0.054] |
+
+All three exclude zero. For scale: the emitted integer (0.607) does **not** beat
+a trajectory-length baseline (0.610); the log-odds channel (0.702) clearly does.
+
+**Resolution (RQ1), full sample (905):** the emitted integer takes **18 distinct
+values** and cannot express any audit budget below **7.3% FPR** — its top bucket
+alone holds 37 benign trajectories. The continuous channels take 905 distinct
+values and reach **0.2% FPR**, a **36x improvement in usable audit depth**.
+
+**Transfer (RQ2) is not answerable on this dataset — a negative result.** A
+linear probe reaches AUROC 0.98–0.99, but it is reading dataset artefacts, not
+the monitor's judgement. Three were found and controlled in turn, and the probe
+survived all three. The decisive diagnostic: after **one** transformer block,
+mean-pooled activations already separate the classes at **0.999**; twenty-six
+further blocks add **+0.001**. Details in
+[`writeup/post.md`](writeup/post.md) and DECISIONS.md D-030 to D-032.
+
+| | Outcome |
 |---|---|
-| Gate 1 — signal check | pending |
-| RQ1 — tie plateaus and tail resolution | pending |
-| Gate 2 — leave-one-family-out transfer | pending |
-| RQ3 — probe vs logit score | pending |
+| Gate 1 — signal check | passed on judgement at n=60, confirmed at full sample (0.655 [0.621, 0.689]) |
+| RQ1 — tie plateaus and tail resolution | **confirmed**, 36x resolution-floor improvement |
+| Gate 2 — transfer | **not answerable on mrt**; probe confounded by dataset artefacts |
+| RQ3 — probe vs logit score | logit channels win on the deployable comparison; probe arm invalid |
 
 ---
 

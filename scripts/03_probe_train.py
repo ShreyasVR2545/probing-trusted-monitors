@@ -216,8 +216,14 @@ def main() -> int:
             test_df = attach_probe_column(test_df, hids, hs, "head")
             log.info(f"seed {seed}: head val AUROC {hval:.3f} vs probe {best_overall.val_auroc:.3f}")
 
-            test_df = add_structure_baseline(
-                test_df, split.train, cfg["analysis"].get("structure_features", []), seed)
+            # Fit on the full frame (which contains the training rows) and keep
+            # only the test rows: passing test_df alone left no training rows to
+            # fit on, and the baseline silently never appeared.
+            scored = add_structure_baseline(
+                df, split.train, cfg["analysis"].get("structure_features", []), seed)
+            if "structure_baseline" in scored.columns:
+                test_df = test_df.merge(
+                    scored[["traj_id", "structure_baseline"]], on="traj_id", how="left")
             chans = available_channels(test_df) + ["length_baseline"]
             if "structure_baseline" in test_df.columns:
                 chans.append("structure_baseline")

@@ -1,0 +1,115 @@
+{
+  "probe_layer": 8,
+  "representation": "mean_pool",
+  "layer_tuned": true,
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "n_trajectories": 299,
+  "summary": {
+    "strategy": {
+      "families": [
+        "jailbreak",
+        "monitor_manipulation",
+        "no_thinking"
+      ],
+      "mean_transfer_auroc": 0.9751365593470857,
+      "mean_indist_auroc": 0.9907738095238096,
+      "mean_transfer_ratio": 0.9840484106831795,
+      "min_transfer_ratio": 0.9659296932024205,
+      "max_transfer_ratio": 0.9959899749373434,
+      "families_with_ci_including_0.5": [],
+      "zero_shot_mean_transfer_auroc": {
+        "emitted": 0.6301,
+        "length_baseline": 0.6237,
+        "logit_ev": 0.655,
+        "logit_logodds_80": 0.6664
+      }
+    },
+    "task": {
+      "families": [
+        "american_airlines_2",
+        "api_key_calendar_agendas_2",
+        "bank_transfer_2",
+        "expenditure_accounting",
+        "spam_filter_update"
+      ],
+      "mean_transfer_auroc": 0.7137807874665018,
+      "mean_indist_auroc": 0.9830440274011704,
+      "mean_transfer_ratio": 0.7227697271226639,
+      "min_transfer_ratio": 0.3625153266771764,
+      "max_transfer_ratio": 0.8863551922719672,
+      "families_with_ci_including_0.5": [
+        "american_airlines_2"
+      ],
+      "zero_shot_mean_transfer_auroc": {
+        "emitted": 0.6281,
+        "length_baseline": 0.5749,
+        "logit_ev": 0.6491,
+        "logit_logodds_80": 0.6569
+      }
+    }
+  },
+  "rq2_prediction": "transfer ratio in 0.6-0.9",
+  "rq2_falsified": false,
+  "per_family": [
+    {
+      "axis": "strategy",
+      "family": "jailbreak",
+      "transfer_auroc": 0.9902,
+      "indist_auroc": 1.0,
+      "ratio": 0.9902
+    },
+    {
+      "axis": "strategy",
+      "family": "monitor_manipulation",
+      "transfer_auroc": 0.996,
+      "indist_auroc": 1.0,
+      "ratio": 0.996
+    },
+    {
+      "axis": "strategy",
+      "family": "no_thinking",
+      "transfer_auroc": 0.9392,
+      "indist_auroc": 0.9723,
+      "ratio": 0.9659
+    },
+    {
+      "axis": "task",
+      "family": "american_airlines_2",
+      "transfer_auroc": 0.3446,
+      "indist_auroc": 0.9505,
+      "ratio": 0.3625
+    },
+    {
+      "axis": "task",
+      "family": "api_key_calendar_agendas_2",
+      "transfer_auroc": 0.8852,
+      "indist_auroc": 0.9987,
+      "ratio": 0.8864
+    },
+    {
+      "axis": "task",
+      "family": "bank_transfer_2",
+      "transfer_auroc": 0.7651,
+      "indist_auroc": 0.9943,
+      "ratio": 0.7695
+    },
+    {
+      "axis": "task",
+      "family": "expenditure_accounting",
+      "transfer_auroc": 0.8414,
+      "indist_auroc": 0.9982,
+      "ratio": 0.8429
+    },
+    {
+      "axis": "task",
+      "family": "spam_filter_update",
+      "transfer_auroc": 0.7325,
+      "indist_auroc": 0.9735,
+      "ratio": 0.7525
+    }
+  ]
+}

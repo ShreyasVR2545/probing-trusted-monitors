@@ -82,5 +82,35 @@
     "started": 1788440014.9573507,
     "wall_clock_s": 6.2,
     "peak_gpu_gb": 0.0
+  },
+  {
+    "stage": "03_probe_train",
+    "started": 1788440081.7444077,
+    "wall_clock_s": 1381.52,
+    "peak_gpu_gb": 0.0
+  },
+  {
+    "stage": "03_probe_train",
+    "started": 1788441048.1212854,
+    "wall_clock_s": 996.66,
+    "peak_gpu_gb": 0.0
+  },
+  {
+    "stage": "04_transfer",
+    "started": 1788442051.564468,
+    "wall_clock_s": 1356.82,
+    "peak_gpu_gb": 0.0
+  },
+  {
+    "stage": "05_analysis",
+    "started": 1788443416.3444388,
+    "wall_clock_s": 263.71,
+    "peak_gpu_gb": 0.0
+  },
+  {
+    "stage": "06_figures",
+    "started": 1788443687.7339268,
+    "wall_clock_s": 7.69,
+    "peak_gpu_gb": 0.0
   }
 ]

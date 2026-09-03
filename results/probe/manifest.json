@@ -1,10 +1,10 @@
 {
   "cell": "probe",
-  "status": "running",
-  "started": "2026-09-03T18:24:45",
+  "status": "complete",
+  "started": "2026-09-03T18:40:50",
   "provenance": {
     "seed": 0,
-    "git_sha": "cb9cac9f0fb40806dabd069a81e423f503e06593-dirty",
+    "git_sha": "86c6f3536ec0772ec3914f9d6015eeee9319d98c-dirty",
     "libraries": {
       "python": "3.12.13",
       "torch": "2.9.1+cu128",
@@ -33,7 +33,7 @@
         "max_per_cell": 40,
         "balance_labels": true,
         "agent_models": null,
-        "min_family_count": 30
+        "min_family_count": 18
       },
       "monitor_view": {
         "strip_agent_thinking": true,
@@ -49,6 +49,14 @@
       "analysis": {
         "restrict_agent_models": [
           "claude-3-5-sonnet-20241022"
+        ],
+        "require_zero_thinking": true,
+        "structure_features": [
+          "render_n_messages_rendered",
+          "render_rendered_chars",
+          "render_tool_results_elided",
+          "render_messages_elided",
+          "n_messages"
         ]
       },
       "probe": {
@@ -134,5 +142,41 @@
       "smoke": false
     }
   },
-  "outputs": {}
+  "outputs": {
+    "n": 299,
+    "split_sizes": {
+      "train": 179,
+      "val": 45,
+      "test": 75
+    },
+    "seeds": [
+      0,
+      1,
+      2
+    ],
+    "best_layer_by_seed": {
+      "0": 8,
+      "1": 8,
+      "2": 8
+    },
+    "best_rep_by_seed": {
+      "0": "mean_pool",
+      "1": "mean_pool",
+      "2": "mean_pool"
+    },
+    "layer_tuned": true,
+    "auroc_by_channel": {
+      "emitted": 0.5007,
+      "ensemble": 0.7174,
+      "head": 0.9597,
+      "length_baseline": 0.6767,
+      "logit_ev": 0.5345,
+      "logit_logodds_50": 0.4927,
+      "logit_logodds_80": 0.5784,
+      "logit_logodds_90": 0.64,
+      "probe": 0.9802
+    }
+  },
+  "finished": "2026-09-03T18:57:24",
+  "wall_clock_s": 994.36
 }
