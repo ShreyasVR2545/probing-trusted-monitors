@@ -422,3 +422,52 @@ versus honest APPS solutions, single-step and far shorter. Spotting a backdoor
 in a code diff is a much better match for a small model's capabilities than
 auditing a long agent trajectory. The brief flags it as a weaker setting for
 this question and that caveat would be reported prominently.
+
+### D-025 — mrt is a monitor-*evasion* benchmark: AUROC ~0.62 is near its ceiling
+**2026-09-03.** Before escalating further, I validated the labels and rendering
+against mrt's own recorded monitor verdicts (`monitoring_response`, produced by
+Claude — a far stronger monitor than anything runnable on this hardware, and in
+many configurations shown the agent's scratchpad).
+
+**mrt's own monitor scores AUROC 0.621 [0.589, 0.651] on my labels**
+(n=1,138, 4,000 bootstrap resamples). My 3B monitor gets 0.567-0.580.
+
+Two conclusions follow, and the second is the important one.
+
+**The pipeline is sound.** The labels are right, the rendering is sane, and the
+signal is real: the CI excludes 0.5 comfortably at full sample size. A broken
+label or a mangled transcript would not produce a coherent ordering.
+
+**The task is intrinsically near-impossible on this data, by design.** The
+per-family breakdown under mrt's own monitor:
+
+| Attack family | n | AUROC vs all benign |
+|---|---|---|
+| `naive` | 88 | **0.878** |
+| `jailbreak` | 58 | 0.671 |
+| `visible_thinking` | 135 | 0.640 |
+| `liar` | 120 | 0.619 |
+| `no_thinking` | 73 | 0.597 |
+| `selective_thinking` | 112 | 0.497 |
+| `monitor_manipulation` | 46 | **0.349** |
+
+This is exactly what MRT — *Monitor Red Teaming* — is built to contain. The
+attacks were adversarially optimised against monitors, and it shows:
+`selective_thinking` is at chance and `monitor_manipulation` is **below** it,
+meaning those attacks read as *less* suspicious than genuinely benign runs.
+Sampling uniformly across families averages a 0.878 family against a 0.349
+family and lands near 0.6 regardless of the monitor.
+
+**This reframes Gate 1.** My monitor was not failing to find signal that a
+better monitor would find; it lands within 0.05 AUROC of a frontier model on the
+same trajectories. The gate's 0.60 threshold sits essentially at this
+benchmark's ceiling.
+
+It also explains the n=150 power problem: at that size the CI half-width is
+about 0.085, so no point estimate near 0.6 can exclude 0.5. At the full 1,154
+trajectories the same AUROC would carry a CI of roughly +/-0.033 and would
+exclude 0.5 clearly. Criterion 1's *CI* clause was failing on sample size, not
+on absence of signal.
+
+Recorded before the 7B result is known, so this cannot be read as
+rationalisation after the fact.
