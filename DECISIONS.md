@@ -595,3 +595,60 @@ trajectories were retained by construction, so no finished work was discarded.
 905 trajectories at ~43 s projects to about 9.7 GPU-hours for Stage 2 and
 roughly 13.3 hours in total, inside the budget. The subset is written to
 `results/data/score_subset.json` and Stage 2 honours it when present.
+
+### D-030 — The in-distribution probe result is CONFOUNDED and is withdrawn
+**2026-09-03.** Stage 3 returned probe AUROC **0.989** and head **0.994**
+against the monitor's own emitted score at 0.641. That gap is not credible, and
+it is not real. Three pieces of evidence, in increasing order of decisiveness:
+
+**1. `mean_pool` beats `score_pos`** (0.998 vs 0.946 on validation). If the
+probe were recovering the monitor's judgement, the *scoring position* — the
+token whose output is the score distribution — should carry it. Instead the mean
+over the whole transcript wins, which points at transcript content rather than
+monitor computation.
+
+**2. A layer-0 probe scores 0.993.** Layer 0 is the embedding layer. No
+monitoring has happened there; a mean-pooled layer-0 representation is close to
+bag-of-tokens. Nothing that depends on the model's *judgement* can be decoded at
+layer 0, so a near-perfect layer-0 probe is proof that the signal is surface
+text statistics.
+
+**3. Agent identity predicts the label at AUROC 0.805, with no text at all.**
+The mrt sample is severely imbalanced by generating agent:
+
+| Agent model | benign | attack |
+|---|---|---|
+| `claude-3-5-haiku-20241022` | 105 | **0** |
+| `gemini-2.5-flash-preview-04-17` | 67 | 2 |
+| `claude-sonnet-4-20250514` | 43 | 1 |
+| `o3` | 3 | **36** |
+| `gemini-2.5-pro` | **0** | 17 |
+
+29.4% of trajectories come from an agent model that is more than 95% one-sided.
+A probe that can identify the writing style of the generating model — which a
+mean-pooled representation trivially can — gets those for free.
+
+**This is my error, and it traces to D-016.** D-008 originally restricted the
+sample to two agent models precisely so the label would not be confounded with
+agent identity. D-016 reversed that to gain negatives, reasoning that agent
+identity could be "recorded per trajectory and reported as a confound check
+instead of being designed out". That was wrong: this confound is fatal to the
+probe analysis, not something a footnote can absorb.
+
+It is also exactly the critique from arXiv:2509.21344 — that probes lean on
+textual evidence rather than privileged internal state — which the
+preregistration claimed did not apply here. It does apply. The claim in
+PREREGISTRATION.md §1 that "the monitor's sole input is text, so the critique
+does not bite" was about the *monitor*; it does not protect the *probe*, which
+reads activations that encode the input's surface form.
+
+**The zero-shot channels are not affected in the same way.** `emitted` and the
+logit channels reach 0.655-0.676 — far from 0.8, let alone 0.99 — so they are
+plainly not exploiting agent identity to any comparable degree. The RQ1
+resolution result (D-031) stands.
+
+**Correction, not deletion.** The analysis is re-run on an agent-controlled
+subset (D-031). The confounded numbers are kept and reported as a negative
+methodological result, because "a linear probe on a trusted monitor's
+activations can score 0.99 by reading which model wrote the transcript" is a
+genuinely useful warning for anyone building white-box monitoring.

@@ -1,14 +1,97 @@
-07:33:36 | INFO    | ### stage 2: score and cache activations
-07:33:42 | INFO    | scoring with Qwen/Qwen2.5-7B-Instruct / prompt=specific
-07:33:42 | INFO    | === stage 02_score_and_cache: start ===
-Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|##5       | 1/4 [00:04<00:12,  4.02s/it]Loading checkpoint shards:  50%|#####     | 2/4 [00:07<00:07,  3.90s/it]Loading checkpoint shards:  75%|#######5  | 3/4 [00:11<00:03,  3.96s/it]Loading checkpoint shards: 100%|##########| 4/4 [00:15<00:00,  3.85s/it]Loading checkpoint shards: 100%|##########| 4/4 [00:15<00:00,  3.89s/it]
-07:34:02 | INFO    | 28 layers, capturing 15 (stride 2); score trie {'n_candidates': 101, 'n_nodes': 102, 'tokens_per_candidate': {1: 10, 2: 90, 3: 1}, 'max_depth': 3, 'example_100': [16, 15, 15], 'example_95': [24, 20]}
-07:34:02 | INFO    | resuming: 44 trajectories already cached
-07:34:02 | INFO    | 1110 trajectories to score
-07:34:02 | INFO    | [power] CPU max processor state 100% -> 70% for this run
-07:34:02 | INFO    | [power] start: GPU 53.0C, 11.29W (limit NoneW), cooldown 1.5s, thermal ceiling 84C
-07:41:41 | INFO    |   10/1110 (45.9s/traj, ~840.7 min left, cache 0.011 GB)
-07:46:41 | INFO    |   20/1110 (37.9s/traj, ~689.2 min left, cache 0.013 GB)
-07:54:32 | INFO    |   30/1110 (41.0s/traj, ~738.0 min left, cache 0.015 GB)
-08:04:56 | INFO    |   40/1110 (46.3s/traj, ~826.5 min left, cache 0.017 GB)
-08:10:07 | INFO    |   50/1110 (43.3s/traj, ~764.9 min left, cache 0.019 GB)
+08:12:30 | INFO    | ### stage 2: score and cache activations
+08:12:39 | INFO    | scoring with Qwen/Qwen2.5-7B-Instruct / prompt=specific
+08:12:39 | INFO    | === stage 02_score_and_cache: start ===
+08:12:41 | INFO    | scoring subset active: 905 of 1154 trajectories (506 benign / 399 attack)
+Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|##5       | 1/4 [00:04<00:14,  4.92s/it]Loading checkpoint shards:  50%|#####     | 2/4 [00:09<00:09,  4.64s/it]Loading checkpoint shards:  75%|#######5  | 3/4 [00:14<00:04,  4.75s/it]Loading checkpoint shards: 100%|##########| 4/4 [00:18<00:00,  4.52s/it]Loading checkpoint shards: 100%|##########| 4/4 [00:18<00:00,  4.60s/it]
+08:13:02 | INFO    | 28 layers, capturing 15 (stride 2); score trie {'n_candidates': 101, 'n_nodes': 102, 'tokens_per_candidate': {1: 10, 2: 90, 3: 1}, 'max_depth': 3, 'example_100': [16, 15, 15], 'example_95': [24, 20]}
+08:13:02 | INFO    | resuming: 94 trajectories already cached
+08:13:02 | INFO    | 811 trajectories to score
+08:13:02 | INFO    | [power] CPU max processor state 100% -> 70% for this run
+08:13:02 | INFO    | [power] start: GPU 54.0C, 10.37W (limit NoneW), cooldown 1.5s, thermal ceiling 84C
+08:19:54 | INFO    |   10/811 (41.2s/traj, ~550.1 min left, cache 0.021 GB)
+08:29:26 | INFO    |   20/811 (49.2s/traj, ~648.9 min left, cache 0.023 GB)
+08:32:16 | INFO    |   30/811 (38.5s/traj, ~500.8 min left, cache 0.025 GB)
+08:34:48 | INFO    |   40/811 (32.7s/traj, ~419.6 min left, cache 0.027 GB)
+08:39:45 | INFO    |   50/811 (32.1s/traj, ~406.7 min left, cache 0.029 GB)
+08:48:51 | INFO    |   60/811 (35.8s/traj, ~448.4 min left, cache 0.031 GB)
+08:51:32 | INFO    |   70/811 (33.0s/traj, ~407.5 min left, cache 0.033 GB)
+08:54:07 | INFO    |   80/811 (30.8s/traj, ~375.4 min left, cache 0.035 GB)
+09:03:04 | INFO    |   90/811 (33.4s/traj, ~400.8 min left, cache 0.037 GB)
+09:10:30 | INFO    |   100/811 (34.5s/traj, ~408.6 min left, cache 0.039 GB)
+09:18:19 | INFO    |   110/811 (35.6s/traj, ~416.0 min left, cache 0.041 GB)
+09:20:59 | INFO    |   120/811 (34.0s/traj, ~391.2 min left, cache 0.043 GB)
+09:26:14 | INFO    |   130/811 (33.8s/traj, ~383.5 min left, cache 0.045 GB)
+09:37:48 | INFO    |   140/811 (36.3s/traj, ~406.3 min left, cache 0.047 GB)
+09:40:33 | INFO    |   150/811 (35.0s/traj, ~385.7 min left, cache 0.049 GB)
+09:47:46 | INFO    |   160/811 (35.5s/traj, ~385.5 min left, cache 0.051 GB)
+09:53:03 | INFO    |   170/811 (35.3s/traj, ~377.1 min left, cache 0.053 GB)
+09:57:41 | INFO    |   180/811 (34.9s/traj, ~366.8 min left, cache 0.055 GB)
+10:04:42 | INFO    |   190/811 (35.3s/traj, ~365.0 min left, cache 0.057 GB)
+10:09:19 | INFO    |   200/811 (34.9s/traj, ~355.2 min left, cache 0.059 GB)
+10:16:09 | INFO    |   210/811 (35.2s/traj, ~352.3 min left, cache 0.061 GB)
+10:18:46 | INFO    |   220/811 (34.3s/traj, ~337.8 min left, cache 0.063 GB)
+10:34:18 | INFO    |   230/811 (36.9s/traj, ~356.9 min left, cache 0.065 GB)
+10:36:29 | INFO    |   240/811 (35.9s/traj, ~341.3 min left, cache 0.067 GB)
+10:39:20 | INFO    |   250/811 (35.1s/traj, ~328.3 min left, cache 0.069 GB)
+10:46:40 | INFO    |   260/811 (35.5s/traj, ~325.6 min left, cache 0.071 GB)
+10:51:16 | INFO    |   270/811 (35.2s/traj, ~317.1 min left, cache 0.073 GB)
+10:58:37 | INFO    |   280/811 (35.5s/traj, ~314.0 min left, cache 0.075 GB)
+11:06:10 | INFO    |   290/811 (35.8s/traj, ~311.0 min left, cache 0.077 GB)
+11:11:25 | INFO    |   300/811 (35.7s/traj, ~303.8 min left, cache 0.079 GB)
+11:23:59 | INFO    |   310/811 (37.0s/traj, ~308.6 min left, cache 0.081 GB)
+11:31:00 | INFO    |   320/811 (37.1s/traj, ~303.8 min left, cache 0.083 GB)
+11:40:44 | INFO    |   330/811 (37.8s/traj, ~302.7 min left, cache 0.085 GB)
+11:45:56 | INFO    |   340/811 (37.6s/traj, ~294.9 min left, cache 0.087 GB)
+11:51:08 | INFO    |   350/811 (37.4s/traj, ~287.3 min left, cache 0.089 GB)
+11:57:43 | INFO    |   360/811 (37.4s/traj, ~281.5 min left, cache 0.091 GB)
+12:02:16 | INFO    |   370/811 (37.2s/traj, ~273.2 min left, cache 0.093 GB)
+12:09:36 | INFO    |   380/811 (37.4s/traj, ~268.3 min left, cache 0.095 GB)
+12:14:51 | INFO    |   390/811 (37.2s/traj, ~261.0 min left, cache 0.097 GB)
+12:17:34 | INFO    |   400/811 (36.7s/traj, ~251.2 min left, cache 0.099 GB)
+12:19:58 | INFO    |   410/811 (36.1s/traj, ~241.5 min left, cache 0.101 GB)
+12:22:52 | INFO    |   420/811 (35.7s/traj, ~232.6 min left, cache 0.103 GB)
+12:26:23 | INFO    |   430/811 (35.3s/traj, ~224.5 min left, cache 0.105 GB)
+12:32:54 | INFO    |   440/811 (35.4s/traj, ~219.1 min left, cache 0.107 GB)
+12:40:00 | INFO    |   450/811 (35.6s/traj, ~214.2 min left, cache 0.109 GB)
+12:45:27 | INFO    |   460/811 (35.5s/traj, ~207.9 min left, cache 0.111 GB)
+12:51:09 | INFO    |   470/811 (35.5s/traj, ~201.8 min left, cache 0.113 GB)
+12:56:22 | INFO    |   480/811 (35.4s/traj, ~195.4 min left, cache 0.115 GB)
+13:07:35 | INFO    |   490/811 (36.1s/traj, ~193.0 min left, cache 0.117 GB)
+13:14:16 | INFO    |   500/811 (36.1s/traj, ~187.4 min left, cache 0.119 GB)
+13:24:28 | INFO    |   510/811 (36.6s/traj, ~183.8 min left, cache 0.121 GB)
+13:28:57 | INFO    |   520/811 (36.5s/traj, ~176.8 min left, cache 0.123 GB)
+13:36:21 | INFO    |   530/811 (36.6s/traj, ~171.4 min left, cache 0.125 GB)
+13:43:45 | INFO    |   540/811 (36.7s/traj, ~166.0 min left, cache 0.127 GB)
+13:54:55 | INFO    |   550/811 (37.3s/traj, ~162.2 min left, cache 0.129 GB)
+14:00:34 | INFO    |   560/811 (37.2s/traj, ~155.8 min left, cache 0.131 GB)
+14:09:46 | INFO    |   570/811 (37.5s/traj, ~150.8 min left, cache 0.133 GB)
+14:18:45 | INFO    |   580/811 (37.8s/traj, ~145.7 min left, cache 0.135 GB)
+14:24:33 | INFO    |   590/811 (37.8s/traj, ~139.2 min left, cache 0.137 GB)
+14:33:50 | INFO    |   600/811 (38.1s/traj, ~133.9 min left, cache 0.139 GB)
+14:38:54 | INFO    |   610/811 (38.0s/traj, ~127.1 min left, cache 0.141 GB)
+14:46:57 | INFO    |   620/811 (38.1s/traj, ~121.4 min left, cache 0.143 GB)
+14:52:58 | INFO    |   630/811 (38.1s/traj, ~114.9 min left, cache 0.145 GB)
+15:03:00 | INFO    |   640/811 (38.4s/traj, ~109.5 min left, cache 0.147 GB)
+15:10:36 | INFO    |   650/811 (38.5s/traj, ~103.4 min left, cache 0.149 GB)
+15:15:22 | INFO    |   660/811 (38.4s/traj, ~96.6 min left, cache 0.151 GB)
+15:20:16 | INFO    |   670/811 (38.3s/traj, ~89.9 min left, cache 0.153 GB)
+15:24:52 | INFO    |   680/811 (38.1s/traj, ~83.2 min left, cache 0.155 GB)
+15:29:47 | INFO    |   690/811 (38.0s/traj, ~76.6 min left, cache 0.157 GB)
+15:37:21 | INFO    |   700/811 (38.1s/traj, ~70.5 min left, cache 0.159 GB)
+15:45:25 | INFO    |   710/811 (38.2s/traj, ~64.4 min left, cache 0.161 GB)
+15:54:06 | INFO    |   720/811 (38.4s/traj, ~58.3 min left, cache 0.163 GB)
+15:56:59 | INFO    |   730/811 (38.1s/traj, ~51.5 min left, cache 0.165 GB)
+16:03:34 | INFO    |   740/811 (38.2s/traj, ~45.1 min left, cache 0.167 GB)
+16:11:13 | INFO    |   750/811 (38.3s/traj, ~38.9 min left, cache 0.169 GB)
+16:22:12 | INFO    |   760/811 (38.6s/traj, ~32.8 min left, cache 0.171 GB)
+16:36:49 | INFO    |   770/811 (39.3s/traj, ~26.8 min left, cache 0.173 GB)
+16:42:21 | INFO    |   780/811 (39.2s/traj, ~20.2 min left, cache 0.175 GB)
+16:45:21 | INFO    |   790/811 (38.9s/traj, ~13.6 min left, cache 0.177 GB)
+16:54:17 | INFO    |   800/811 (39.1s/traj, ~7.2 min left, cache 0.179 GB)
+16:59:21 | INFO    |   810/811 (39.0s/traj, ~0.6 min left, cache 0.181 GB)
+16:59:31 | INFO    |   811/811 (39.0s/traj, ~0.0 min left, cache 0.182 GB)
+16:59:32 | INFO    | [power] restored CPU max processor state to 100%
+16:59:32 | INFO    | [power] paused 0 times for cooling, 1216s total
+16:59:32 | INFO    | parse rate 100.0%; truncated 15.4%; cache 0.182 GB
+16:59:32 | INFO    | [cell scores::primary] complete in 31610.47s
+16:59:32 | INFO    | === stage 02_score_and_cache: done in 31612.44s (peak GPU 6.815 GB) ===
