@@ -1152,3 +1152,49 @@ duplicated `CRASH_MITIGATION.md` link is gone from the key-documents sentence;
 the file is still referenced once in the Compute section, which is a different
 context and intentional. The non-Windows interpreter path is noted in the
 reproduction block.
+
+### D-042 — Author-written README sections; scaffolding stripped
+**2026-09-05.** Five author-written passages inserted **verbatim** into
+`README.md`, replacing the `[AUTHOR: ...]` placeholders. No word, structure or
+punctuation was altered. The only edits permitted by the brief and applied were
+italicising the paper title and hyperlinking the arXiv id in "The problem",
+exactly as the brief specified. Verbatim insertion confirmed by exact substring
+match on nine separately-checked spans.
+
+**Scaffolding removed.** All "Verified data" and "Verified facts to write
+around" blockquotes are gone, along with the blockquote formatting itself: the
+file now contains zero `>`-prefixed lines and the word "verified" appears
+nowhere. Both tables were kept as plain Markdown, the structure-baseline
+comparison and the four-signal leakage table.
+
+**Numbers relocated during the strip, not lost.** Verified by set comparison
+against the previous committed README: **zero numbers lost, zero gained.** Detail
+the author's passages do not cover was preserved as ordinary prose immediately
+beneath the relevant passage:
+
+- Resolution figures, moved into a "Resolution, full sample (n=905)"
+  subsection: `emitted` 0.655 [0.621, 0.689], 18 distinct values, 7.3% floor,
+  37 benign in the top bucket; `logit_ev` 0.675 [0.640, 0.709], 905 distinct
+  values, 0.2% floor, the 1/506 sample limit, and the 36x figure as a lower
+  bound.
+- Threshold-instability figures: `logodds_90` 0.659 to 0.702, `logodds_80`
+  0.676 to 0.663.
+- The first strip pass dropped five numbers, caught by the set comparison and
+  restored: the swept threshold set {50, 80, 90} and the two tuned intervals
+  `logodds_80` +0.056 [+0.028, +0.086] and `logodds_90` +0.095 [+0.049, +0.143].
+  The author's passage gives the point estimates but not the intervals or the
+  set.
+- Confound step-by-step numbers, kept beneath the narrative: `claude-3-5-haiku`
+  105 benign and 0 attacks, `gemini-2.5-pro` 17 attacks and 0 benign, 29.4% of
+  trajectories from a model more than 95% one-sided, and thinking-block presence
+  at 0.783 on the agent-restricted subset against 0.758 on the full sample.
+- The leakage table's population caveat, that rows sit on different populations
+  because `structure_baseline` exists only on the matched subset.
+
+**Small fixes.** Three doubled `---` separators collapsed, after Reproducing,
+after the licence subsection and after Compute; none remain adjacent. The
+histogram's population statement moved to the front of both the caption and the
+alt text, so a skimmer meets "the 75-trajectory held-out test split" before the
+nine-values and tied-at-85 figures; no number was changed. No `[AUTHOR:` marker
+survives. All eight internal links resolve to tracked files and both embedded
+figures exist and are tracked.
