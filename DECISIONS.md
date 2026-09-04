@@ -1099,3 +1099,56 @@ where the block shows `.venv/Scripts/python.exe`.
 **LessWrong URL placeholder.** `**Writeup:** [LessWrong post](TODO-URL)` sits
 directly under the README title. `TODO-URL` is deliberately literal and
 greppable. **This needs replacing with the real URL once the post is live.**
+
+### D-041 — Repo landing-page restructure
+**2026-09-04.** Structure, verification and file operations only. The README's
+prose sections are left as literal `[AUTHOR: ...]` placeholders for the repo
+owner to write, since the landing page should be in his voice; verified figures
+and statistics are preserved in blockquotes beneath each placeholder so the
+numbers cannot drift while the prose is written.
+
+**Step 1: consolidated to one writeup.** The LessWrong version survived and is
+now `writeup/post.md`; the older version was deleted. `writeup/` was removed from
+`.gitignore` and re-tracked, reversing D-039's untracking. Both image URLs were
+converted from `raw.githubusercontent.com` to repo-relative `../figures/` paths,
+which GitHub renders natively and which survive a fork or rename. The
+forum-voice closing section became "Reproducing, and open questions", keeping
+both open questions but dropping the plea for comments. The epistemic-status
+header, footnotes, blockquotes, tables and every number are unchanged.
+
+Verified after editing: **zero em dashes, en dashes, horizontal bars and spaced
+double-hyphens; zero remaining LessWrong references; both relative image paths
+resolve.**
+
+**Step 2: the layer-figure contradiction was already fixed.** The brief
+anticipated an arithmetically impossible pair (0.999 at layer 0 against a +0.020
+gain). That was corrected in the previous pass, D-040, and re-verification
+against `results/probe/layer_sweep.csv` confirms a single consistent statement:
+**0.976 at layer 0, 0.996 at best, +0.020**, seed-averaged validation AUROC on
+the matched subset of 299, identical across all three seeds. The 0.999 and 0.993
+figures survive in one place only, explicitly attributed to the agent-restricted
+(461) and full (905) configurations, so a reader meeting them elsewhere can place
+them rather than read a contradiction.
+
+**Figures embedded.** Two, not three: `fig1_signal_histogram.png` in the problem
+section and `fig6_layer_profile.png` in the results section, each with
+descriptive alt text and a caption below. No third was added, because the
+remaining figures restate numbers already given in the text and would spend
+reader attention on redundancy. Both paths verified to exist and to be tracked.
+
+**Stale framing removed.** The research-questions block and the null-result
+paragraph moved below the results into "What was registered in advance",
+past-tensed, with RQ2 marked as the question that proved unanswerable at the
+point it is introduced. The preregistered framing is kept rather than deleted,
+since registering RQ2 as the headline and then reporting its failure is part of
+what makes the repository credible.
+
+**Small fixes.** The `TODO-URL` LessWrong placeholder is gone, as is the
+"deliberately not tracked here" note now that the writeup is tracked again. The
+`head` channel is reported at **0.960** and marked as confounded exactly as
+`probe` is, since it reads the same `mean_pool` layer-8 representation. Every
+internal link resolves to a tracked file, `writeup/post.md` included. The
+duplicated `CRASH_MITIGATION.md` link is gone from the key-documents sentence;
+the file is still referenced once in the Compute section, which is a different
+context and intentional. The non-Windows interpreter path is noted in the
+reproduction block.
