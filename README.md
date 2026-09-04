@@ -1,5 +1,7 @@
 # Probing trusted monitors
 
+**Writeup:** [LessWrong post](TODO-URL)
+
 **I set out to test whether linear probes on a trusted monitor's activations
 detect attack families they were never trained on. The dataset turned out to be
 unable to support that question — a probe scoring 0.99 was reading which model
@@ -44,18 +46,22 @@ the monitor already performed. Two cheaper-than-retraining ways to recover it:
 | `emitted` | the argmax-decoded integer — today's baseline | — |
 | `logit_ev` / `logit_logodds` | read the model's *distribution* over score tokens at the scoring position instead of taking the argmax | one forward pass, no training |
 | `probe` | L2 logistic probe on residual-stream activations at that same position | needs labels |
-| `head` | small MLP on the same activations — a stronger comparison than zero-shot alone | needs labels |
+| `head` | small MLP on the same activations, as a stronger comparison than zero-shot alone | needs labels; **reached 0.960 and is confounded exactly as `probe` is**, since it reads the same representation |
 | `length_baseline` | rendered trajectory length used directly as a score | a confound control |
 | `structure_baseline` | logistic fit on message count, size and elision counts | a confound control |
 
-**Research questions.** **RQ1** — do the continuous channels remove the tie
-plateaus and extend usable signal further down the FPR curve? **RQ2 (headline)**
-— does a probe trained on one family of attacks detect *held-out* families? A
-monitor earns its place by catching attacks nobody anticipated; a probe that
-only recognises attacks it was trained on is a memoriser, not a monitor.
-**RQ3** — does the probe beat the free logit score at all? If not, the
-recommendation is simply *stop taking the argmax*, which is a better result
-because it is more deployable.
+**Research questions, as registered in advance.** **RQ1** asked whether the
+continuous channels remove the tie plateaus and extend usable signal further
+down the FPR curve. **RQ2** was registered as the headline: does a probe trained
+on one family of attacks detect *held-out* families? A monitor earns its place
+by catching attacks nobody anticipated, and a probe that only recognises attacks
+it was trained on is a memoriser rather than a monitor. **RQ2 turned out to be
+unanswerable on this dataset**, for reasons in the Results section below.
+**RQ3** asked whether the probe beats the free logit score at all.
+
+RQ1 was answered. RQ3 was answered only in the sense that the probe arm
+collapsed, leaving *stop taking the argmax* as the recommendation, which is the
+more deployable of the two outcomes anyway.
 
 **What this is not.** This is not a claim that probes see something the text
 does not contain. The claim is only that quantising the monitor's judgement to
@@ -68,10 +74,12 @@ results below refute it.** It protects the *monitor*; it says nothing about the
 *probe*, which reads activations encoding the input's surface form. The probe
 arm of this project failed for exactly that reason.
 
-**A null is a real result.** If all three channels match, the finding is that
-monitor-score quantisation is not a bottleneck and the tie plateau is cosmetic.
-That is reported with the same care as a positive finding — see
-[PREREGISTRATION.md](PREREGISTRATION.md) §8.
+**A null was registered as a real result**, and part of one arrived. The
+preregistration committed to reporting, with the same care as a positive
+finding, the outcome in which quantisation turns out not to be a bottleneck
+(see [PREREGISTRATION.md](PREREGISTRATION.md) §8). The channels did separate,
+so that particular null did not land, but the probe arm produced a different
+negative result and is reported in full rather than dropped.
 
 ---
 
@@ -129,23 +137,27 @@ frontier monitor (n=1,138). Full derivation in DECISIONS.md D-030 to D-037.
 
 **A control worth adopting:** fit your probe at the **first decoder block** as
 well as your best layer. Here, mean-pooled activations separate the classes at
-**0.976 after one block** and 0.996 at the best layer — twenty-six further
+**0.976 after one block** and 0.996 at the best layer, so twenty-six further
 blocks of monitoring computation add +0.020, while the monitor's own considered
-score is 0.607. If a shallow probe matches your deep one, you are reading the
-input, not the model's judgement.
+score is 0.607. Those are seed-averaged validation AUROCs on the matched subset
+of 299; the same sweep gives 0.999 at layer 0 on the agent-restricted subset of
+461 and 0.993 on the full 905, because those populations carry additional
+confounds. If a shallow probe matches your deep one, you are reading the input,
+not the model's judgement.
 
 **Resolution (RQ1), full sample (905):** the emitted integer takes **18 distinct
 values** and cannot express any audit budget below **7.3% FPR** — its top bucket
 alone holds 37 benign trajectories. The continuous channels take 905 distinct
 values and reach **0.2% FPR**, a **36x improvement in usable audit depth**.
 
-**Transfer (RQ2) is not answerable on this dataset — a negative result.** A
-linear probe reaches AUROC 0.98–0.99, but it is reading dataset artefacts, not
-the monitor's judgement. Three were found and controlled in turn, and the probe
-survived all three. The decisive diagnostic: after **one** transformer block,
-mean-pooled activations already separate the classes at **0.999**; twenty-six
-further blocks add **+0.020** on the final matched subset. Details in
-DECISIONS.md D-030 to D-032.
+**Transfer (RQ2) is not answerable on this dataset, a negative result.** A
+linear probe reaches AUROC 0.98 to 0.99, but it is reading dataset artefacts,
+not the monitor's judgement. Three were found and controlled in turn, and the
+probe survived all three. The decisive diagnostic, on the final matched subset
+(n=299, seed-averaged validation AUROC): mean-pooled activations already
+separate the classes at **0.976 after one decoder block**, and twenty-six
+further blocks add only **+0.020**, reaching 0.996. Details in DECISIONS.md
+D-030 to D-032.
 
 | | Outcome |
 |---|---|
@@ -174,6 +186,8 @@ uv venv --python 3.12 .venv
 uv pip install --python .venv/Scripts/python.exe torch==2.9.1 \
     --index-url https://download.pytorch.org/whl/cu128
 uv pip install --python .venv/Scripts/python.exe -r requirements.txt
+
+# On Linux and macOS the interpreter is .venv/bin/python throughout.
 
 # Always smoke-test first: 30 trajectories, 1 seed, every stage, ~15 minutes.
 python scripts/run_all.py --stage all --smoke --pass-gates
@@ -272,6 +286,6 @@ results/       aggregated CSVs and manifests (committed); activations are not
 
 Key documents: [PREREGISTRATION.md](PREREGISTRATION.md) (predictions, registered
 first), [DECISIONS.md](DECISIONS.md) (every judgement call, with reasoning),
-[HARDWARE.md](HARDWARE.md), [CRASH_MITIGATION.md](CRASH_MITIGATION.md),
+[HARDWARE.md](HARDWARE.md), and
 [CRASH_MITIGATION.md](CRASH_MITIGATION.md) (why this host kept resetting, and
 the fix). The prose writeup is deliberately not tracked here.
