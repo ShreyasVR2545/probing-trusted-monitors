@@ -1,7 +1,6 @@
 # Probing trusted monitors
 
-[AUTHOR: two or three sentences. What you set out to test, what the dataset
-turned out to prevent, and what survived. Your own words.]
+I set out to test whether the integer suspiciousness score a trusted monitor emits discards signal the monitor has already computed, comparing the emitted argmax against a continuous score read off the same forward pass and against a linear probe on the monitor's activations. The probe arm did not survive the dataset: labels in `ScaleAI/mrt` are recoverable from the generating model and from scaffold artefacts, so a probe hitting 0.989 was reading its input rather than the monitor's judgement, and the held-out-attack-family question I had registered as the headline is unanswerable here. What survived is the paired comparison, the continuous channel beats the emitted integer by 0.031 AUROC on the same forward pass with the same supervision, and the resolution result underneath it: 18 distinct emitted values against 905, and an auditing floor of 7.3% FPR against 0.2%.
 
 **Full writeup:** [`writeup/post.md`](writeup/post.md)
 
@@ -9,64 +8,52 @@ turned out to prevent, and what survived. Your own words.]
 
 ## The problem
 
-[AUTHOR: the tie-plateau motivation, in your words. Keep the Lucassen & Kaufman
-citation and the 250-trajectories-tied-at-95 fact, both preserved below.]
+A trusted monitor reads a trajectory and emits one integer. Everything downstream, defer-to-trusted, defer-to-resample, how the audit budget is spent, consumes that integer and nothing else, so two trajectories with the same score are indistinguishable to the protocol however differently the monitor read them. Lucassen and Kaufman, *Retrying vs Resampling in AI Control* ([arXiv:2605.26047](https://arxiv.org/abs/2605.26047), Appendix H.2), run into this directly: under max-of-5 aggregation, over 250 trajectories tie at a maximum score of 95, degrading auditing in the 4e-3 to 2e-4 FPR range. Their fix, a second-max tie-break, is a fix at the aggregation layer. My question is whether the tie needs to exist at all, since the forward pass has a full distribution over score tokens and taking the argmax is the step that throws it away.
 
-> Verified facts to write around:
-> - Lucassen & Kaufman, *Retrying vs Resampling in AI Control* (arXiv:2605.26047),
->   Appendix H.2: under max-of-5 aggregation, **over 250 trajectories tie at a
->   maximum score of 95**, degrading auditing in the 4e-3 to 2e-4 FPR range.
->   Their fix was a second-max tie-break.
-> - Everything downstream of the monitor (defer-to-trusted, defer-to-resample,
->   audit allocation) consumes that single integer.
+![Histogram of the monitor's emitted integer scores on the 75-trajectory held-out test split, stacked by true label. Scores pile onto roughly nine discrete values with wide empty gaps between them, and ten trajectories sit tied at the maximum of 85.](figures/fig1_signal_histogram.png)
 
-![Histogram of the monitor's emitted integer scores, stacked by true label. Scores pile onto roughly nine discrete values with wide empty gaps between them, and ten trajectories sit tied at the maximum of 85.](figures/fig1_signal_histogram.png)
-
-*The monitor's emitted integer on the 75-trajectory held-out test split. It lands
-on a handful of round values rather than spreading across the range, and
-everything inside a bar is unrankable. The full 905-trajectory sample reaches 18
-distinct values.*
+*On the 75-trajectory held-out test split, where the full 905-trajectory sample
+reaches 18 distinct values: the monitor's emitted integer lands on a handful of
+round values rather than spreading across the range, and everything inside a bar
+is unrankable.*
 
 ---
 
 ## What I found
 
-[AUTHOR: the two scoped claims, relative and absolute, and why they are
-compatible. Keep the exact numbers below; write the sentences yourself.]
+Two claims at different scopes, and they do not conflict.
 
-> **Verified data. The relative claim (holds).**
-> - `logit_ev` minus `emitted` = **+0.031 [+0.009, +0.054]**, preregistered
->   comparison #1, paired bootstrap over trajectories on the matched subset.
->   Both channels are read from the same tensor on the same forward pass with
->   identical supervision (none), so dataset artefacts inflate both and cancel
->   in the difference.
-> - Threshold variants are a **tuned maximum, not preregistered**:
->   `logodds_80` +0.056 [+0.028, +0.086], `logodds_90` +0.095 [+0.049, +0.143],
->   best of three thresholds {50, 80, 90}, no multiplicity correction applied.
-> - Threshold ranking is **unstable across samples**: `logodds_90` is the worst
->   log-odds channel on the full sample (0.659) and the best on the matched
->   subset (0.702), while `logodds_80` goes 0.676 to 0.663. Treat any specific
->   threshold as unvalidated.
+**The relative claim holds.** Read the expected value over the score-token distribution instead of the argmax and AUROC improves by 0.031 [+0.009, +0.054], paired over trajectories, preregistered as comparison #1. Both channels come off the same tensor on the same forward pass with identical supervision, none, so whatever is wrong with the dataset inflates both and cancels in the difference. The mechanism is resolution, quantified below.
 
-> **Verified data. Resolution (RQ1), full sample n=905.**
-> - `emitted`: 0.655 [0.621, 0.689], **18 distinct values**, resolution floor
->   **7.3% FPR**, since its top bucket alone holds 37 benign trajectories.
-> - `logit_ev`: 0.675 [0.640, 0.709], **905 distinct values**, floor **0.2%**,
->   which is the sample's own limit of 1/506 rather than the channel's. The 36x
->   improvement in usable audit depth is therefore a lower bound on the gap.
+**The absolute claim does not hold.** A cross-fitted logistic baseline reading no content at all, only trajectory shape, scores 0.765, and every content-reading channel sits at or below it. That is a statement about this dataset rather than about the channels: the baseline is supervised and feeds on the leakage documented below, the channels are zero-shot. It means no absolute AUROC here should be read as a monitor-quality number, and it leaves the paired result standing.
 
-> **Verified data. The absolute claim (does not hold), matched subset n=299.**
-> A cross-fitted logistic baseline on trajectory *shape* alone, reading no
-> content, scores **0.765 [0.707, 0.820]**. Against it:
->
-> | Channel | AUROC | delta vs structure | 95% CI | Verdict |
-> |---|---|---|---|---|
-> | `logit_logodds_90` | 0.702 | -0.063 | [-0.143, **+0.018**] | indistinguishable |
-> | `logit_ev` | 0.638 | -0.127 | [-0.213, -0.044] | significantly worse |
-> | `emitted` | 0.607 | -0.159 | [-0.244, -0.076] | significantly worse |
->
-> The baseline is supervised while the channels are zero-shot, so this is a weak
-> failure rather than a like-for-like loss. The paired result above is unaffected.
+One caveat I would rather state than bury: the threshold variants (`logodds_80` +0.056, `logodds_90` +0.095) are a tuned maximum over three thresholds with no multiplicity correction, and their ranking flips between the full sample and the matched subset. Take +0.031 as the result and the thresholds as unvalidated.
+
+### Resolution, full sample (n=905)
+
+`emitted` scores 0.655 [0.621, 0.689] and takes **18 distinct values**. Its
+resolution floor, the lowest false-positive rate at which it can express any
+audit budget at all, is **7.3% FPR**, because its top score bucket alone holds
+37 benign trajectories. `logit_ev` scores 0.675 [0.640, 0.709], takes **905
+distinct values**, and reaches a floor of **0.2%**, which is the sample's own
+limit of 1/506 rather than the channel's. The 36x improvement in usable audit
+depth is therefore a lower bound on the gap.
+
+The threshold instability, concretely: `logodds_90` is the worst log-odds
+channel on the full sample at 0.659 and the best on the matched subset at 0.702,
+while `logodds_80` goes the other way, 0.676 to 0.663. The three thresholds
+swept were {50, 80, 90}, and the tuned variants' full intervals are `logodds_80`
++0.056 [+0.028, +0.086] and `logodds_90` +0.095 [+0.049, +0.143].
+
+### Against the structure baseline, matched subset (n=299)
+
+The cross-fitted baseline scores 0.765 [0.707, 0.820]. Against it:
+
+| Channel | AUROC | Delta vs structure | 95% CI | Verdict |
+|---|---|---|---|---|
+| `logit_logodds_90` | 0.702 | -0.063 | [-0.143, **+0.018**] | indistinguishable |
+| `logit_ev` | 0.638 | -0.127 | [-0.213, -0.044] | significantly worse |
+| `emitted` | 0.607 | -0.159 | [-0.244, -0.076] | significantly worse |
 
 ![Validation AUROC of a linear probe at each decoder block. The mean-pooled curve starts at 0.976 after the first block and stays flat near 0.99 across all 28 blocks, while the monitor's own emitted score sits far below at 0.607.](figures/fig6_layer_profile.png)
 
@@ -82,57 +69,34 @@ because those populations carry additional confounds.*
 
 ## What went wrong, and the control that caught it
 
-[AUTHOR: the confound narrative, compressed. Keep the three confound numbers
-below. The transferable point is the control, so give it the emphasis.]
+The probe reached 0.989 against the monitor's own 0.655. That should have read as a headline and instead it was the warning. Agent identity alone predicts the label at 0.805 with no text involved, because some generating models contributed almost only benign trajectories and others almost only attacks. Thinking-block presence alone gives 0.783; not one of the 175 benign trajectories has one. I removed both: restricted to a single generating model, the probe stayed at 1.000; matched on thinking-block presence, 0.980. Two confounds removed and the number barely moved, which is the point at which removing confounds one at a time stops being a strategy.
 
-> **Verified data. Three confounds, removed in turn; the probe survived all three.**
-> A linear probe reached **0.989** against the monitor's own 0.655.
->
-> 1. **Agent identity alone predicts the label at 0.805**, with no text at all.
->    `claude-3-5-haiku` contributed 105 benign trajectories and 0 attacks;
->    `gemini-2.5-pro` contributed 17 attacks and 0 benign. 29.4% of trajectories
->    come from a model that is more than 95% one-sided. Restricting to a single
->    generating model: the probe stayed at 1.000.
-> 2. **Thinking-block presence alone gives 0.783** on the agent-restricted
->    subset, 0.758 on the full sample. Not one of the 175 benign trajectories
->    contains a `<model_thinking>` block. Matching on it: the probe stayed at
->    0.980.
-> 3. **Depth buys nothing** (figure above), so whatever remains is a shallow
->    surface statistic rather than the monitor's judgement.
->
-> **The control, stated generally:** fit your probe at the first decoder block as
-> well as at your best layer. If the shallow probe matches the deep one, you are
-> reading the input, not the model's computation. One extra fit, no new data.
->
-> This is a concrete instance of the arXiv:2509.21344 critique. The
-> preregistration claimed it did not apply here because the monitor's only input
-> is text. That reasoning protects the *monitor*, not the *probe*, and was wrong.
+The control that settled it is cheap and general: **fit your probe at the first decoder block as well as at your best layer.** Here the shallow probe is at 0.976 and the best layer at 0.996, so twenty-six further blocks of monitoring computation buy 0.020. Whatever the probe reads is a surface statistic already present in the input, not the monitor's judgement. One extra fit, no new data, and it works without your having to guess what the confound is. My preregistration argued the arXiv:2509.21344 critique did not apply because the monitor's only input is text. That reasoning protects the monitor, not the probe, and it was wrong.
+
+The imbalance behind the first confound: `claude-3-5-haiku` contributed 105
+benign trajectories and 0 attacks, `gemini-2.5-pro` contributed 17 attacks and 0
+benign, and 29.4% of trajectories come from a model that is more than 95%
+one-sided. Thinking-block presence gives 0.783 on the agent-restricted subset
+and 0.758 on the full sample.
 
 ---
 
 ## The dataset finding
 
-[AUTHOR: mrt label leakage, in your words. Worth framing as information for users
-of the benchmark rather than a criticism of its authors: mrt was built for
-monitor red-teaming and is entirely fit for that purpose.]
+mrt was built to red-team monitors: generate attack trajectories, run monitors over them, see what gets caught. For that purpose none of what follows matters, and mrt is entirely fit for it. It matters for what I was doing, training and evaluating a discriminator against mrt's labels, because those labels can be recovered without reading the trajectory at all.
 
-> **Verified data. Four signals recover mrt's labels; three read no content.**
->
-> | Signal | Content? | AUROC | Population |
-> |---|---|---|---|
-> | Agent identity alone | no | **0.805** | full, n=905 |
-> | Trajectory structure, cross-fitted | no | **0.765** | matched, n=299 |
-> | Thinking-block presence alone | no | **0.758** | full, n=905 |
-> | This project's 7B monitor | yes | 0.655 | full, n=905 |
-> | mrt's own frontier monitor | yes | **0.621** | full, n=1,138 |
->
-> Rows sit on different populations and are labelled accordingly, since
-> `structure_baseline` exists only on the matched subset. **The best attack
-> detector in this experiment does not read the trajectory.**
->
-> Practical consequence: control for the generating model and for scaffold
-> presence, and report a structure-only baseline. If your monitor does not beat
-> 0.765 on a matched subset, you have not shown it is reading the attack.
+Four signals recover the label; three of them read no content. If you are using mrt this way, the practical form is: control for the generating model, match on scaffold presence, and report a structure-only baseline next to your monitor. If your monitor does not beat 0.765 on a matched subset, you have not yet shown it is reading the attack.
+
+| Signal | Content? | AUROC | Population |
+|---|---|---|---|
+| Agent identity alone | no | **0.805** | full, n=905 |
+| Trajectory structure, cross-fitted | no | **0.765** | matched, n=299 |
+| Thinking-block presence alone | no | **0.758** | full, n=905 |
+| This project's 7B monitor | yes | 0.655 | full, n=905 |
+| mrt's own frontier monitor | yes | **0.621** | full, n=1,138 |
+
+Rows sit on different populations and are labelled accordingly, since
+`structure_baseline` exists only on the matched subset.
 
 ---
 
@@ -163,6 +127,7 @@ exactly as `probe` is, since it reads the same representation). Two controls:
 elision counts).
 
 ---
+
 ## Reproducing
 
 Requires an NVIDIA GPU. Hardware detection picks the model and quantisation. On
@@ -214,8 +179,6 @@ granularity.
 
 ---
 
----
-
 ## Data
 
 [`ScaleAI/mrt`](https://huggingface.co/datasets/ScaleAI/mrt) — agent
@@ -254,8 +217,6 @@ committed.
 
 ---
 
----
-
 ## Compute
 
 Wall-clock and peak GPU memory per stage are recorded in `results/timing.json`.
@@ -267,8 +228,6 @@ evidence, and the mitigations are in
 on a laptop. The main fix turned out to be an efficiency bug: the long-context
 prefill was running twice per trajectory. Fixing it cut runtime from 33 s to
 7 s per trajectory and peak VRAM from 4.7 GB to 2.8 GB.
-
----
 
 ---
 
