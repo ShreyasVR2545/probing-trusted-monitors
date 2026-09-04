@@ -607,11 +607,14 @@ token whose output is the score distribution — should carry it. Instead the me
 over the whole transcript wins, which points at transcript content rather than
 monitor computation.
 
-**2. A layer-0 probe scores 0.993.** Layer 0 is the embedding layer. No
-monitoring has happened there; a mean-pooled layer-0 representation is close to
-bag-of-tokens. Nothing that depends on the model's *judgement* can be decoded at
-layer 0, so a near-perfect layer-0 probe is proof that the signal is surface
-text statistics.
+**2. A layer-0 probe scores 0.993** (full-sample configuration, n=905; the
+equivalent figures are 0.999 on the agent-restricted subset and 0.976 on the
+final matched subset). Layer 0 here is the output of the **first decoder
+block**, not the embedding table -- an earlier version of this entry said
+"embedding layer", which was wrong and is corrected here. Almost no monitoring
+computation has happened after one block, so a near-perfect probe there is
+evidence that the signal is a shallow surface statistic rather than the
+monitor's judgement.
 
 **3. Agent identity predicts the label at AUROC 0.805, with no text at all.**
 The mrt sample is severely imbalanced by generating agent:
@@ -954,3 +957,90 @@ in far fewer words than the investigation took.
 The post closes with two explicit requests for pushback: whether the +0.031
 effect survives on a monitor with real headroom above the tie plateau, and
 whether the depth-gain control is already standard somewhere I have not read.
+
+### D-039 — Final pre-publication pass
+**2026-09-04.** Seven items, no compute. Findings and calls.
+
+**Item 1: the layer-profile figures were already correct, and the brief's
+premise was mistaken.** The brief stated that `post.md` reports 0.999 at layer 0
+and 1.000 at best while the LessWrong version reports 0.976 and 0.996. It does
+not: **both writeups say 0.976 and 0.996**, and both match the live artefact.
+
+Traced to `results/probe/layer_sweep.csv`, the figures are **seed-averaged
+validation AUROC on the final matched subset (n=299)**, identical across all
+three seeds. Corroborated by `results/analysis/layer_profile.csv`, by fig6, and
+by the matched run's own log lines (`best layer 8 (val AUROC 0.996)`,
+`best layer 18 (val AUROC 0.933)`).
+
+The 0.999/1.000 figures are real but belong to an **earlier configuration**.
+Three ran in sequence, each with its own layer profile:
+
+| Configuration | n | `mean_pool` layer 0 to best |
+|---|---|---|
+| full sample | 905 | 0.993 to 0.998 |
+| agent-restricted | 461 | 0.999 to 1.000 |
+| matched (final) | 299 | **0.976 to 0.996** |
+
+I quoted the n=461 numbers in conversation while that intermediate CSV was
+current; the matched run later overwrote it. The writeups were always written
+from the final artefact, so no correction to either was needed. The LessWrong
+version now carries a footnote naming the subset, the split, and the fact that
+layer 0 is the first decoder block's output, so a reader opening the repo can
+reconcile it.
+
+**Two real errors this surfaced, both in D-030 and now fixed there.** It cited
+0.993 without stating that figure is the full-sample configuration, and it
+described layer 0 as "the embedding layer", which is wrong: the hooks capture
+decoder *block* outputs. The writeups had this right; the decision record did
+not.
+
+**Full verification: 31 of 31 numeric claims** in `lesswrong_post.md` trace to
+live artefacts with zero mismatches. A stale `+0.001` in `README.md` was also
+found and corrected to `+0.020`, the matched-subset figure.
+
+**Item 3: title.** Option A, leading with the control. The novel contribution is
+the depth-gain diagnostic rather than the argmax result, which is a small effect
+on a weak monitor, and the body already said the control is the part most worth
+taking away. The summary block was reordered to lead with the control so title,
+summary and body agree.
+
+**Item 5: figure URLs.** Direct HTTPS verification failed late in the pass with
+TLS errors across curl, Python and .NET alike, which is a transient local
+network condition rather than a server problem; the same URLs returned HTTP 200
+earlier in the session. Existence was confirmed instead through the GitHub API:
+both files are present on `main` under `figures/`, with sizes 92,832 and 57,508
+bytes, and GitHub's own `download_url` points at exactly the
+`raw.githubusercontent.com` paths used in the post. The default branch is
+`main`.
+
+The tie-plateau histogram was added, since it shows the piling-up clearly. It is
+the **75-trajectory test split**, so it shows about nine occupied values rather
+than the 18 the full 905-trajectory sample reaches, and the surrounding prose
+says so; otherwise a reader would find the counts contradictory.
+
+**Item 6: `writeup/` untracked, and the history caveat.** `git rm -r --cached`
+removes the files from the current tree only. **Both writeups remain fully
+recoverable from earlier commits**, and history rewriting was out of scope, so
+this is a recorded choice rather than an assumption that the content is gone.
+`figures/`, `results/` aggregates, `PREREGISTRATION.md`, `DECISIONS.md`,
+`README.md`, `CRASH_MITIGATION.md`, `HARDWARE.md` and `KAGGLE.md` all remain
+tracked. Every `writeup/` reference in `README.md` was replaced with the content
+itself rather than a dead link, and `PREREGISTRATION.md`'s pointer carries a
+dated annotation instead of an edit, so the preregistered text stays unaltered.
+
+**Commit structure deviates from the brief, deliberately.** The brief specified
+six commits, but untracking `writeup/` makes every edit to the LessWrong post
+uncommittable: five of the six would have been empty. Having been pulled up for
+exactly that in D-036, I made two commits carrying real diffs instead of six
+carrying one. The five items are documented here rather than in commit subjects.
+
+**Item 7: dash check.** Zero em dashes, en dashes, horizontal bars, figure
+dashes and spaced double-hyphens. Substitution check against the previously
+committed version: colons 28 to 32, parentheses 3 to 5, across 296 added words,
+so density is flat and the tic has not relocated.
+
+**Length.** 2,705 words of prose, 2,794 including tables, 2,832 including the
+image alt text this brief requires, 2,927 including markdown headers. Inside the
+2,000 to 2,800 target on any reading that counts prose rather than accessibility
+metadata. A round of trimming was applied to the confound narrative first, per
+the earlier brief's ordering, before stopping short of cutting required content.
