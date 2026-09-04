@@ -13,8 +13,10 @@ probably a control: if a probe at the first decoder block matches your best
 layer, you are reading the input, not the model's judgement.**
 
 > **Status: complete.** All stages ran; both gates were reported. The probe arm
-> produced a negative result and is reported as such. Full writeup:
-> [`writeup/post.md`](writeup/post.md).
+> produced a negative result and is reported as such. The prose writeup is kept
+> outside this repository; everything it asserts is reproducible from
+> `PREREGISTRATION.md`, `DECISIONS.md`, `results/` and `figures/`, and the
+> summary below is self-contained.
 
 ---
 
@@ -119,8 +121,11 @@ than by reading it. Agent identity alone gives 0.805, structure alone 0.765,
 thinking-block presence alone 0.758 — against 0.655 for this project's monitor
 and 0.621 for mrt's own frontier monitor. Benign and attack trajectories came
 from different generation pipelines. Anyone evaluating a monitor on mrt should
-control for generating model and scaffold and report a structure-only baseline;
-see [`writeup/post.md`](writeup/post.md).
+control for generating model and scaffold and report a structure-only baseline.
+The four signals, with their populations: agent identity 0.805 (n=905),
+trajectory structure cross-fitted 0.765 (n=299 matched), thinking-block presence
+0.758 (n=905), against 0.655 for this monitor (n=905) and 0.621 for mrt's own
+frontier monitor (n=1,138). Full derivation in DECISIONS.md D-030 to D-037.
 
 **A control worth adopting:** fit your probe at the **first decoder block** as
 well as your best layer. Here, mean-pooled activations separate the classes at
@@ -139,8 +144,8 @@ linear probe reaches AUROC 0.98–0.99, but it is reading dataset artefacts, not
 the monitor's judgement. Three were found and controlled in turn, and the probe
 survived all three. The decisive diagnostic: after **one** transformer block,
 mean-pooled activations already separate the classes at **0.999**; twenty-six
-further blocks add **+0.001**. Details in
-[`writeup/post.md`](writeup/post.md) and DECISIONS.md D-030 to D-032.
+further blocks add **+0.020** on the final matched subset. Details in
+DECISIONS.md D-030 to D-032.
 
 | | Outcome |
 |---|---|
@@ -268,4 +273,5 @@ results/       aggregated CSVs and manifests (committed); activations are not
 Key documents: [PREREGISTRATION.md](PREREGISTRATION.md) (predictions, registered
 first), [DECISIONS.md](DECISIONS.md) (every judgement call, with reasoning),
 [HARDWARE.md](HARDWARE.md), [CRASH_MITIGATION.md](CRASH_MITIGATION.md),
-`writeup/post.md` (the writeup).
+[CRASH_MITIGATION.md](CRASH_MITIGATION.md) (why this host kept resetting, and
+the fix). The prose writeup is deliberately not tracked here.

@@ -6,6 +6,11 @@ Git history is the timestamp: this file is committed under
 `results/`. Deviations from this document are listed in
 `writeup/post.md` under "Deviations from preregistration".
 
+> *Added 2026-09-04, after the fact and marked as such so the original text
+> above is unaltered: the prose writeup is no longer tracked in this
+> repository. The deviations are recorded in `DECISIONS.md`, principally
+> D-016, D-017, D-026, D-029, D-030 and D-033.*
+
 ---
 
 ## 1. Background and motivation
