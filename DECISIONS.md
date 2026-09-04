@@ -921,3 +921,36 @@ identical supervision, so dataset leakage inflates both channels and cancels in
 the difference. Mirrored in the README. The supervised-versus-zero-shot
 asymmetry note remains stated once, in the structure-baseline section where it
 belongs.
+
+### D-038 — LessWrong version of the writeup
+**2026-09-04.** `writeup/lesswrong_post.md` added for publication; the
+repo-facing `writeup/post.md` is unchanged. No new analysis and no changed
+numbers: a set comparison of every numeric token in the two files returns no
+figure present in the LessWrong version that is absent from `post.md`.
+
+**One number was nearly changed and was put back.** A first pass wrote "about 15
+hours wall-clock" where `post.md` says 15.4. Rounding is still a changed number
+under the brief's rule, so it now reads 15.4 with the 11.5 GPU-bound figure
+alongside.
+
+**Dash removal was structural, not substitution.** Zero em dashes, en dashes,
+horizontal bars, or spaced double-hyphens remain. The risk with this kind of
+edit is relocating the tic into colons or parentheses, so both were counted:
+colons fell from 36 to 28 and parentheses from 26 to 3, while 34 em dashes were
+removed. Sentences were split or recast rather than repunctuated.
+
+**Venue-specific choices.** Epistemic status header and a four-sentence bolded
+summary block, per LessWrong convention. Every section header rewritten as a
+claim rather than a label. Three footnotes carry detail that interrupted the
+argument: the tokenisation trie, the bootstrap parameters, and the host-crash
+diagnosis. One figure inline, the per-layer probe profile, since it is the only
+one carrying an argument prose cannot; the rest are linked to the repo. Raw
+GitHub URLs verified to return HTTP 200 before being written.
+
+Main text is 2,730 words excluding footnotes, inside the 2,000 to 2,800 target.
+The confound narrative was compressed hardest, since three confounds can be told
+in far fewer words than the investigation took.
+
+The post closes with two explicit requests for pushback: whether the +0.031
+effect survives on a monitor with real headroom above the tie plateau, and
+whether the depth-gain control is already standard somewhere I have not read.
