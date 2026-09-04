@@ -1044,3 +1044,58 @@ image alt text this brief requires, 2,927 including markdown headers. Inside the
 2,000 to 2,800 target on any reading that counts prose rather than accessibility
 metadata. A round of trimming was applied to the confound narrative first, per
 the earlier brief's ordering, before stopping short of cutting required content.
+
+### D-040 — README fix pass
+**2026-09-04.** Five fixes, no compute. Findings.
+
+**Fix 1: an arithmetically impossible contradiction, confirmed and resolved.**
+The README stated the depth-gain result twice with incompatible numbers. One
+passage had layer 0 at 0.976 with a gain of +0.020; the other had layer 0 at
+**0.999** with the same +0.020 gain. **0.999 + 0.020 = 1.019, which is not a
+possible AUROC.** The second passage had kept the pre-correction layer-0 figure
+from the agent-restricted (n=461) configuration while picking up the corrected
+gain from the matched (n=299) one.
+
+Verified against `results/probe/layer_sweep.csv`, seed-averaged validation AUROC
+on the matched subset, identical across all three seeds:
+
+| Representation | layer 0 | best | gain |
+|---|---|---|---|
+| `mean_pool` | 0.976 | 0.996 (layer 8) | +0.020 |
+| `score_pos` | 0.870 | 0.933 (layer 18) | +0.063 |
+
+Both README passages now carry the same figures and both name the population and
+split, matching the form the LessWrong post's footnote uses. The 0.999 and 0.993
+figures still appear once, in the control paragraph, explicitly attributed to the
+agent-restricted (461) and full (905) configurations, so a reader who encounters
+them elsewhere can place them rather than reading them as a contradiction.
+
+**Fix 3: `head` exists and is reported.** `results/probe/channels.csv` gives it
+0.960 [0.904, 0.999] across three seeds, fitted on `mean_pool` at layer 8, which
+is the same representation the linear probe uses. It is therefore confounded in
+exactly the way the probe is, and the channel table now says so in the row
+rather than leaving a reader hunting for a number that never arrives. Not
+removed, because a two-layer network doing no better than a linear probe is
+itself evidence that linear decodability was not the limiting factor.
+
+**Fix 2: the setup no longer promises a result the README withdraws.** The
+research-questions paragraph is past-tense, marks RQ2 as registered-as-headline
+and then unanswerable at the point RQ2 is introduced, and says which questions
+were actually answered. The null-result paragraph is likewise past-tense: the
+registered null was that quantisation is not a bottleneck, that particular null
+did not land because the channels did separate, and the negative result that did
+arrive came from the probe arm instead. The preregistered framing is kept rather
+than deleted, since registering RQ2 as the headline and then reporting its
+failure is part of what makes the repository credible.
+
+**Fixes 4 and 5.** The duplicated `CRASH_MITIGATION.md` link in the
+key-documents sentence is removed, keeping the described version; the file is
+still referenced once more in the Compute section, which is a different context
+and intentional. Every internal link was checked against `git ls-files` and all
+resolve to tracked files, with no surviving link into the now-untracked
+`writeup/`. A one-line note records that Linux and macOS use `.venv/bin/python`
+where the block shows `.venv/Scripts/python.exe`.
+
+**LessWrong URL placeholder.** `**Writeup:** [LessWrong post](TODO-URL)` sits
+directly under the README title. `TODO-URL` is deliberately literal and
+greppable. **This needs replacing with the real URL once the post is live.**
